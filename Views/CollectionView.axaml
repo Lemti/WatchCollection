@@ -1,0 +1,118 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:WatchCollection.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="550"
+        x:Class="WatchCollection.Views.CollectionView"
+        x:DataType="vm:CollectionViewModel"
+        x:Name="Collection">
+
+    <Design.DataContext>
+        <vm:CollectionViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Header -->
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="Mes montres" FontSize="28" FontWeight="Bold" Foreground="#1B1B2F"/>
+                <TextBlock Text="{Binding MyObservableWatches.Count, StringFormat={}{0} montres dans la collection}" 
+                           FontSize="13" Foreground="#8E8E93" Margin="0,4,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                <Button Content="Importer" Command="{Binding ImportCsvCommand}" Classes="primary" FontSize="12"/>
+                <Button Content="Exporter" Command="{Binding ToggleExportPanelCommand}"
+                        Background="#E5E5EA" Foreground="#1B1B2F" CornerRadius="8"
+                        Padding="16,10" FontSize="12"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Status -->
+        <TextBlock DockPanel.Dock="Top" Text="{Binding StatusMessage}" Foreground="#34C759" FontSize="12" 
+                   FontStyle="Italic" Margin="0,0,0,8"
+                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+        <!-- Panneau sélection colonnes -->
+        <Border DockPanel.Dock="Top" Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,12"
+                BoxShadow="0 1 4 0 #10000000"
+                IsVisible="{Binding ShowExportPanel}">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Sélectionnez les colonnes à exporter" FontWeight="SemiBold" FontSize="14" Foreground="#1B1B2F"/>
+                <ItemsControl ItemsSource="{Binding ExportColumns}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}"
+                                      Margin="0,0,16,6" FontSize="13"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Exporter" Command="{Binding ConfirmExportCommand}" Classes="primary" FontSize="12"/>
+                    <Button Content="Annuler" Command="{Binding ToggleExportPanelCommand}"
+                            Background="#F2F2F7" Foreground="#636366" CornerRadius="8" Padding="16,10" FontSize="12"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Liste -->
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding MyObservableWatches}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding ((vm:CollectionViewModel)DataContext).FromParentCommand, ElementName=Collection}"
+                                CommandParameter="{Binding Id}"
+                                Background="Transparent" Padding="0" Margin="0,0,0,8"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                BorderThickness="0" CornerRadius="12" Cursor="Hand">
+                            <Border Background="White" CornerRadius="12" Padding="16"
+                                    BoxShadow="0 1 4 0 #10000000">
+                                <Grid ColumnDefinitions="80,*,Auto">
+                                    <!-- Image -->
+                                    <Border Background="#F5F5F7" CornerRadius="10" 
+                                            Height="70" Width="70" VerticalAlignment="Center">
+                                        <Panel>
+                                            <Image Source="{Binding Picture}" 
+                                                   Stretch="Uniform" Height="60" Width="60"
+                                                   IsVisible="{Binding Picture, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                            <TextBlock Text="⌚" FontSize="28" 
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Foreground="#C7C7CC"
+                                                       IsVisible="{Binding Picture, Converter={x:Static ObjectConverters.IsNull}}"/>
+                                        </Panel>
+                                    </Border>
+
+                                    <!-- Infos -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0" Spacing="2">
+                                        <TextBlock Text="{Binding Brand}" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
+                                        <TextBlock Text="{Binding Model}" FontSize="13" Foreground="#636366"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                            <Border Background="#F2F2F7" CornerRadius="4" Padding="6,2">
+                                                <TextBlock Text="{Binding Movement}" FontSize="11" Foreground="#636366"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding Diameter, StringFormat={}{0}mm}" FontSize="11" 
+                                                       Foreground="#8E8E93" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Year}" FontSize="11" 
+                                                       Foreground="#8E8E93" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Price, StringFormat={}{0:N0} €}"
+                                                   FontSize="15" FontWeight="SemiBold" Foreground="#34C759" Margin="0,3,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Chevron -->
+                                    <TextBlock Grid.Column="2" Text="›" FontSize="24" Foreground="#C7C7CC"
+                                               VerticalAlignment="Center" Margin="10,0,5,0"/>
+                                </Grid>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

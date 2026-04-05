@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:WatchCollection.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="800"
+             x:Class="WatchCollection.Views.ChartsView"
+             x:DataType="vm:ChartsViewModel">
+
+    <Design.DataContext>
+        <vm:ChartsViewModel/>
+    </Design.DataContext>
+
+    <ScrollViewer>
+        <StackPanel Spacing="16">
+            <TextBlock Text="Graphiques" FontSize="28" FontWeight="Bold" Foreground="#1B1B2F"/>
+            <TextBlock Text="Vue d'ensemble de votre collection" FontSize="13" Foreground="#8E8E93"/>
+
+            <!-- Pie charts side by side -->
+            <Grid ColumnDefinitions="*,16,*">
+                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="18" BoxShadow="0 1 4 0 #10000000">
+                    <StackPanel>
+                        <TextBlock Text="Stock par marque" FontWeight="SemiBold" FontSize="14" Foreground="#1B1B2F" Margin="0,0,0,8"/>
+                        <lvc:PieChart Series="{Binding BrandSeries}" LegendPosition="Bottom" Height="260"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="18" BoxShadow="0 1 4 0 #10000000">
+                    <StackPanel>
+                        <TextBlock Text="Types de mouvement" FontWeight="SemiBold" FontSize="14" Foreground="#1B1B2F" Margin="0,0,0,8"/>
+                        <lvc:PieChart Series="{Binding MovementSeries}" LegendPosition="Bottom" Height="260"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Bar chart full width -->
+            <Border Background="White" CornerRadius="12" Padding="18" BoxShadow="0 1 4 0 #10000000">
+                <StackPanel>
+                    <TextBlock Text="Comparaison des prix" FontWeight="SemiBold" FontSize="14" Foreground="#1B1B2F" Margin="0,0,0,8"/>
+                    <lvc:CartesianChart Series="{Binding PriceSeries}"
+                                        XAxes="{Binding PriceXAxes}"
+                                        YAxes="{Binding PriceYAxes}"
+                                        Height="350"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

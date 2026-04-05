@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:WatchCollection.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+        x:Class="WatchCollection.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:Name="Main"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="WatchCollection"
+        Background="#F5F5F7">
+
+    <Window.DataContext>
+        <vm:MainWindowViewModel/>
+    </Window.DataContext>
+
+    <Panel>
+        <Grid ColumnDefinitions="220,*" IsVisible="{Binding IsLoggedIn}">
+            <!-- SIDEBAR -->
+            <Border Grid.Column="0" Background="White" BorderBrush="#E5E5EA" BorderThickness="0,0,1,0"
+                    Padding="12,20">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="8,0,0,25">
+                        <TextBlock Text="WatchCollection" FontSize="18" FontWeight="Bold" Foreground="#1B1B2F"/>
+                        <TextBlock Text="{Binding CurrentUserName}" FontSize="12" Foreground="#8E8E93" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <Button DockPanel.Dock="Bottom" Content="Déconnexion" Command="{Binding LogoutCommand}"
+                            Classes="ghost" HorizontalAlignment="Left" Foreground="#FF3B30" FontSize="12"
+                            Margin="8,10,0,0"/>
+
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="COLLECTION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93" 
+                                   Margin="8,0,0,8"/>
+                        <Button Content="Mes montres" Command="{Binding BackToMainCommand}" Classes="sidebar"/>
+                        <Button Content="Ajouter une montre" Command="{Binding GoToAddWatchCommand}" Classes="sidebar"/>
+                        
+                        <TextBlock Text="ANALYSE" FontSize="10" FontWeight="Bold" Foreground="#8E8E93" 
+                                   Margin="8,18,0,8"/>
+                        <Button Content="Graphiques" Command="{Binding GoToChartsCommand}" Classes="sidebar"/>
+
+                        <StackPanel IsVisible="{Binding IsAdmin}" Margin="0,15,0,0">
+                            <TextBlock Text="ADMINISTRATION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93" 
+                                       Margin="8,0,0,8"/>
+                            <Button Content="Utilisateurs" Command="{Binding GoToUsersCommand}" Classes="sidebar"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- CONTENT -->
+            <Border Grid.Column="1" Padding="30,25" Background="#F5F5F7">
+                <TransitioningContentControl Content="{Binding CurrentPage}" />
+            </Border>
+        </Grid>
+
+        <!-- LOGIN -->
+        <Panel IsVisible="{Binding !IsLoggedIn}">
+            <TransitioningContentControl Content="{Binding CurrentPage}" />
+        </Panel>
+    </Panel>
+</Window>

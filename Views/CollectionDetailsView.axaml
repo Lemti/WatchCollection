@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:WatchCollection.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="600"
+             x:Class="WatchCollection.Views.CollectionDetailsView"
+             x:DataType="vm:CollectionDetailsViewModel">
+
+    <Design.DataContext>
+        <vm:CollectionDetailsViewModel/>
+    </Design.DataContext>
+
+    <ScrollViewer>
+        <StackPanel>
+            <!-- Header -->
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,20">
+                <Button Content="← Retour" Command="{Binding BackCommand}"
+                        Background="#F2F2F7" Foreground="#007AFF" Padding="14,8"
+                        CornerRadius="8" FontSize="13"/>
+                <TextBlock Text="Détail de la montre" FontSize="28" FontWeight="Bold" 
+                           Foreground="#1B1B2F" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- MODE LECTURE -->
+            <Border Background="White" CornerRadius="16" Padding="30" BoxShadow="0 1 8 0 #10000000"
+                    IsVisible="{Binding !IsEditing}">
+                <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="160,*">
+                        <Border Background="#F5F5F7" CornerRadius="14" Height="140" Width="140" 
+                                VerticalAlignment="Top">
+                            <Panel>
+                                <Image Source="{Binding MyWatch.Picture}" 
+                                       Stretch="Uniform" Height="110" Width="110"
+                                       IsVisible="{Binding MyWatch.Picture, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                <TextBlock Text="⌚" FontSize="50" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="#C7C7CC"
+                                           IsVisible="{Binding MyWatch.Picture, Converter={x:Static ObjectConverters.IsNull}}"/>
+                            </Panel>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Spacing="6" Margin="25,0,0,0">
+                            <TextBlock Text="{Binding MyWatch.Brand}" FontSize="28" FontWeight="Bold" Foreground="#1B1B2F"/>
+                            <TextBlock Text="{Binding MyWatch.Model}" FontSize="18" Foreground="#636366" Margin="0,0,0,8"/>
+                            
+                            <Border Background="#F5F5F7" CornerRadius="10" Padding="16">
+                                <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Référence" Foreground="#8E8E93" FontSize="13" Margin="0,3"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MyWatch.Reference}" FontSize="13" FontWeight="SemiBold" Foreground="#1B1B2F" Margin="0,3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Code-barre" Foreground="#8E8E93" FontSize="13" Margin="0,3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MyWatch.Barcode}" FontSize="13" FontWeight="SemiBold" Foreground="#1B1B2F" Margin="0,3"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Mouvement" Foreground="#8E8E93" FontSize="13" Margin="0,3"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MyWatch.Movement}" FontSize="13" FontWeight="SemiBold" Foreground="#1B1B2F" Margin="0,3"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Diamètre" Foreground="#8E8E93" FontSize="13" Margin="0,3"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MyWatch.Diameter, StringFormat={}{0} mm}" FontSize="13" FontWeight="SemiBold" Foreground="#1B1B2F" Margin="0,3"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Boîtier" Foreground="#8E8E93" FontSize="13" Margin="0,3"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding MyWatch.CaseMaterial}" FontSize="13" FontWeight="SemiBold" Foreground="#1B1B2F" Margin="0,3"/>
+                                </Grid>
+                            </Border>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="30" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="ANNÉE" Foreground="#8E8E93" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding MyWatch.Year}" FontSize="20" FontWeight="SemiBold" Foreground="#1B1B2F"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="STOCK" Foreground="#8E8E93" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding MyWatch.Stock}" FontSize="20" FontWeight="SemiBold" Foreground="#1B1B2F"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="PRIX" Foreground="#8E8E93" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding MyWatch.Price, StringFormat={}{0:N0} €}" 
+                                               FontSize="24" FontWeight="Bold" Foreground="#34C759"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Actions -->
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                        <Button Content="Modifier" Command="{Binding StartEditCommand}"
+                                Background="#007AFF" Foreground="White" Padding="16,10" CornerRadius="8" FontSize="13"/>
+                        <Button Content="Supprimer" Command="{Binding DeleteCommand}"
+                                Background="#FFF0F0" Foreground="#FF3B30" Padding="16,10" CornerRadius="8" FontSize="13"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#34C759" FontSize="12" FontStyle="Italic"
+                               IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- MODE ÉDITION -->
+            <Border Background="White" CornerRadius="16" Padding="30" BoxShadow="0 1 8 0 #10000000"
+                    IsVisible="{Binding IsEditing}">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="Modifier la montre" FontSize="20" FontWeight="Bold" Foreground="#1B1B2F"/>
+
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Marque" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditBrand}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="Modèle" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditModel}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Référence" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditReference}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="Code-barre" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditBarcode}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Mouvement" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditMovement}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="Diamètre (mm)" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditDiameter}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,16,*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Matériau" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditCaseMaterial}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="Prix (€)" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditPrice}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4" Spacing="4">
+                            <TextBlock Text="Année" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBox Text="{Binding EditYear}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Stock" FontSize="12" Foreground="#8E8E93"/>
+                        <TextBox Text="{Binding EditStock}" MaxWidth="150" HorizontalAlignment="Left"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                        <Button Content="Enregistrer" Command="{Binding SaveEditCommand}"
+                                Background="#34C759" Foreground="White" Padding="16,10" CornerRadius="8" FontSize="13"/>
+                        <Button Content="Annuler" Command="{Binding CancelEditCommand}"
+                                Background="#F2F2F7" Foreground="#636366" Padding="16,10" CornerRadius="8" FontSize="13"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
