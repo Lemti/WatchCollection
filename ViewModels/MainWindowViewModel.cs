@@ -11,86 +11,253 @@ namespace WatchCollection.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    [ObservableProperty] private ViewModelBase _currentPage;
+    [ObservableProperty] private ViewModelBase? _currentPage;
     [ObservableProperty] private bool _isLoggedIn;
     [ObservableProperty] private bool _isAdmin;
-    [ObservableProperty] private string _currentUserName = "";
+    [ObservableProperty] private string _currentUserName = string.Empty;
+    [ObservableProperty] private string _statusMessage = string.Empty;
+
+    /// <summary>
+    /// Version affichée dans l'UI (exigence : versioning visible à l'écran).
+    /// </summary>
+    public string AppVersion => "Version 1.1";
 
     private readonly JSONServices _jsonServices = new();
+    private readonly MongoDBService _mongoDbService = new();
 
+    /// <summary>
+    /// Constructeur synchrone : aucune opération async ici.
+    /// L'initialisation asynchrone se fait via InitializeAsync(), appelée explicitement depuis App.
+    /// </summary>
     public MainWindowViewModel()
     {
-        CurrentPage = new LoginViewModel(OnLoginSuccess);
+        CurrentPage = new LoginViewModel(OnLoginSuccessRequested);
     }
 
-    private async void OnLoginSuccess()
+    /// <summary>
+    /// Méthode d'initialisation asynchrone. À appeler après construction.
+    /// Sépare proprement la construction synchrone de toute opération réseau ou I/O.
+    /// </summary>
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    // ===== Navigation entre pages =====
+
+    [RelayCommand]
+    private void GoToCollection() => CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
+
+    [RelayCommand]
+    private void GoToAddWatch() => CurrentPage = new AddWatchViewModel(OnWatchAddedRequested);
+
+    [RelayCommand]
+    private void GoToUsers() => CurrentPage = new UsersViewModel();
+
+    [RelayCommand]
+    private void GoToCharts() => CurrentPage = new ChartsViewModel();
+
+    [RelayCommand]
+    private void GoToDetailsFromChild(ObjectId watchId)
+    {
+        CurrentPage = new CollectionDetailsViewModel(
+            watchId,
+            onBack: GoToCollection,
+            onDeleted: GoToCollection);
+    }
+
+    [RelayCommand]
+    private void BackToMain() => GoToCollection();
+
+    [RelayCommand]
+    private void Logout()
+    {
+        Globals.CurrentUser = null;
+        IsLoggedIn = false;
+        IsAdmin = false;
+        CurrentUserName = string.Empty;
+        StatusMessage = string.Empty;
+        CurrentPage = new LoginViewModel(OnLoginSuccessRequested);
+    }
+
+    // ===== Callbacks =====
+    // Ces méthodes sont des callbacks invoqués par les enfants. Elles déclenchent
+    // une opération asynchrone via une commande dédiée (LoadAfterLoginCommand)
+    // au lieu d'utiliser async void (anti-pattern).
+
+    private void OnLoginSuccessRequested()
     {
         IsLoggedIn = true;
-        IsAdmin = MyGlobals.IsAdmin;
-        CurrentUserName = $"{MyGlobals.CurrentUser?.FirstName} {MyGlobals.CurrentUser?.LastName}";
-        await LoadWatchesFromServer();
-        CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
+        IsAdmin = Globals.IsAdmin;
+        CurrentUserName = $"{Globals.CurrentUser?.FirstName} {Globals.CurrentUser?.LastName}".Trim();
+        if (string.IsNullOrWhiteSpace(CurrentUserName))
+            CurrentUserName = "Utilisateur Local";
+
+        // Lance le chargement asynchrone via une commande (gestion d'erreurs propre par CommunityToolkit)
+        LoadAfterLoginCommand.Execute(null);
     }
 
-    private async Task LoadWatchesFromServer()
+    private void OnWatchAddedRequested()
+    {
+        // Lance la sauvegarde JSON et le retour à la collection via une commande asynchrone
+        SaveAndReturnCommand.Execute(null);
+    }
+
+    /// <summary>
+    /// Charge les montres depuis le serveur JSON après connexion.
+    /// En cas d'échec réseau, charge des données d'exemple.
+    /// </summary>
+   /// <summary>
+/// Charge les montres après connexion, en priorité depuis MongoDB
+/// (collection privée — cahier v4.0). Si la base est indisponible,
+/// fallback sur le serveur JSON, puis sur les données d'exemple.
+/// </summary>
+[RelayCommand]
+private async Task LoadAfterLogin()
+{
+    try
+    {
+        // Stratégie en cascade : MongoDB > JSON serveur > données d'exemple
+        if (Globals.IsDatabaseAvailable && Globals.CurrentUser is not null)
+        {
+            await LoadFromDatabase();
+        }
+        else
+        {
+            await LoadFromJsonServer();
+        }
+    }
+    catch (Exception ex)
+    {
+        LoadSampleData();
+        StatusMessage = $"Erreur de chargement : {ex.Message}. Données d'exemple chargées.";
+    }
+    finally
+    {
+        CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
+    }
+}
+
+/// <summary>
+/// Charge la collection privée de l'utilisateur depuis MongoDB.
+/// Admin : toutes les montres de la base. User : uniquement ses montres.
+/// </summary>
+private async Task LoadFromDatabase()
+{
+    var watches = await _mongoDbService.GetWatchesForUserAsync(Globals.CurrentUser!);
+
+    if (watches.Count > 0)
+    {
+        Globals.MyWatches = watches;
+        StatusMessage = $"{watches.Count} montre(s) chargée(s) depuis votre collection.";
+    }
+    else
+    {
+        Globals.MyWatches = [];
+        StatusMessage = "Votre collection est vide. Ajoutez votre première montre !";
+    }
+}
+
+/// <summary>
+/// Charge depuis le serveur JSON du professeur (mode hors-ligne MongoDB).
+/// </summary>
+private async Task LoadFromJsonServer()
+{
+    try
+    {
+        var watches = await _jsonServices.GetWatchesAsync();
+
+        if (watches is { Count: > 0 })
+        {
+            Globals.MyWatches = watches;
+            StatusMessage = $"{watches.Count} montre(s) chargée(s) depuis le serveur JSON.";
+        }
+        else
+        {
+            LoadSampleData();
+            StatusMessage = "Serveur vide — données d'exemple chargées.";
+        }
+    }
+    catch (System.Net.Http.HttpRequestException)
+    {
+        LoadSampleData();
+        StatusMessage = "Pas de connexion réseau — mode hors-ligne avec données d'exemple.";
+    }
+}
+
+    /// <summary>
+    /// Sauvegarde la collection sur le serveur JSON après ajout, puis retourne à la liste.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveAndReturn()
     {
         try
         {
-            var watches = await _jsonServices.GetWatchesAsync();
-            if (watches.Count > 0)
-                MyGlobals.MyWatches = watches;
-            else
-                LoadSampleData();
+            await _jsonServices.SetWatchesAsync(Globals.MyWatches);
+            StatusMessage = "Collection sauvegardée sur le serveur.";
         }
-        catch { LoadSampleData(); }
+        catch (System.Net.Http.HttpRequestException)
+        {
+            StatusMessage = "Sauvegarde locale uniquement — serveur indisponible.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Erreur de sauvegarde : {ex.Message}";
+        }
+        finally
+        {
+            CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
+        }
     }
+
+    // ===== Cycle de vie =====
+
+    /// <summary>
+    /// Quand la page courante change, on dispose proprement la précédente
+    /// pour éviter les fuites mémoire (notamment pour le scanner dans AddWatch).
+    /// </summary>
+    partial void OnCurrentPageChanging(ViewModelBase? oldValue, ViewModelBase? newValue)
+    {
+        oldValue?.Dispose();
+    }
+
+    // ===== Données d'exemple (mode hors-ligne) =====
 
     private void LoadSampleData()
     {
-        MyGlobals.MyWatches.Clear();
-        MyGlobals.MyWatches.Add(new Watch
-        {
-            Id = ObjectId.GenerateNewId(), Barcode = "5711-1A-010",
-            Brand = "Patek Philippe", Model = "Nautilus", Reference = "5711/1A-010",
-            Movement = "Automatic", Diameter = 40, CaseMaterial = "Acier",
-            Price = 35000, Year = 2021, Stock = 1,
-            Picture = LoadImage("nautilus.png")
-        });
-        MyGlobals.MyWatches.Add(new Watch
-        {
-            Id = ObjectId.GenerateNewId(), Barcode = "126610LN",
-            Brand = "Rolex", Model = "Submariner", Reference = "126610LN",
-            Movement = "Automatic", Diameter = 41, CaseMaterial = "Acier Oystersteel",
-            Price = 9150, Year = 2023, Stock = 2,
-            Picture = LoadImage("submariner.png")
-        });
-        MyGlobals.MyWatches.Add(new Watch
-        {
-            Id = ObjectId.GenerateNewId(), Barcode = "SRPD55K1",
-            Brand = "Seiko", Model = "Seiko 5 Sports", Reference = "SRPD55K1",
-            Movement = "Automatic", Diameter = 42.5, CaseMaterial = "Acier",
-            Price = 299, Year = 2024, Stock = 5,
-            Picture = LoadImage("seiko5.png")
-        });
-        MyGlobals.MyWatches.Add(new Watch
-        {
-            Id = ObjectId.GenerateNewId(), Barcode = "GA2100-1A1",
-            Brand = "Casio", Model = "G-Shock CasiOak", Reference = "GA-2100-1A1",
-            Movement = "Quartz", Diameter = 45.4, CaseMaterial = "Résine carbone",
-            Price = 99, Year = 2022, Stock = 10,
-            Picture = LoadImage("casioak.png")
-        });
-        MyGlobals.MyWatches.Add(new Watch
-        {
-            Id = ObjectId.GenerateNewId(), Barcode = "31030425",
-            Brand = "Omega", Model = "Speedmaster Moonwatch", Reference = "310.30.42.50.01.002",
-            Movement = "Manual", Diameter = 42, CaseMaterial = "Acier",
-            Price = 6900, Year = 2023, Stock = 3,
-            Picture = LoadImage("speedmaster.png")
-        });
+        Globals.MyWatches.Clear();
+
+        Globals.MyWatches.Add(CreateSampleWatch("5711-1A-010", "Patek Philippe", "Nautilus", "5711/1A-010",
+            "Automatic", 40, "Acier", 35000, 2021, 1, "nautilus.png"));
+        Globals.MyWatches.Add(CreateSampleWatch("126610LN", "Rolex", "Submariner", "126610LN",
+            "Automatic", 41, "Acier Oystersteel", 9150, 2023, 2, "submariner.png"));
+        Globals.MyWatches.Add(CreateSampleWatch("SRPD55K1", "Seiko", "Seiko 5 Sports", "SRPD55K1",
+            "Automatic", 42.5, "Acier", 299, 2024, 5, "seiko5.png"));
+        Globals.MyWatches.Add(CreateSampleWatch("GA2100-1A1", "Casio", "G-Shock CasiOak", "GA-2100-1A1",
+            "Quartz", 45.4, "Résine carbone", 99, 2022, 10, "casioak.png"));
+        Globals.MyWatches.Add(CreateSampleWatch("31030425", "Omega", "Speedmaster Moonwatch",
+            "310.30.42.50.01.002", "Manual", 42, "Acier", 6900, 2023, 3, "speedmaster.png"));
     }
 
-    private static Avalonia.Media.IImage? LoadImage(string fileName)
+    private static Watch CreateSampleWatch(string barcode, string brand, string model, string reference,
+        string movement, double diameter, string caseMaterial, decimal price, int year, int stock,
+        string imageFileName)
+    {
+        return new Watch
+        {
+            Id = ObjectId.GenerateNewId(),
+            Barcode = barcode,
+            Brand = brand,
+            Model = model,
+            Reference = reference,
+            Movement = movement,
+            Diameter = diameter,
+            CaseMaterial = caseMaterial,
+            Price = price,
+            Year = year,
+            Stock = stock,
+            Picture = LoadImageOrNull(imageFileName)
+        };
+    }
+
+    private static Avalonia.Media.IImage? LoadImageOrNull(string fileName)
     {
         try
         {
@@ -100,35 +267,5 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             return null;
         }
-    }
-
-    partial void OnCurrentPageChanging(ViewModelBase? oldValue, ViewModelBase? newValue) { oldValue?.Dispose(); }
-
-    [RelayCommand]
-    private void GoToDetailsFromChild(ObjectId watchId)
-    {
-        CurrentPage = new CollectionDetailsViewModel(watchId, () => BackToMain(), () => BackToMain());
-    }
-
-    [RelayCommand] private void BackToMain() { CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand); }
-    [RelayCommand] private void GoToAddWatch() { CurrentPage = new AddWatchViewModel(OnWatchAdded); }
-
-    private async void OnWatchAdded()
-    {
-        try { await _jsonServices.SetWatchesAsync(MyGlobals.MyWatches); } catch { }
-        CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
-    }
-
-    [RelayCommand] private void GoToUsers() { CurrentPage = new UsersViewModel(); }
-    [RelayCommand] private void GoToCharts() { CurrentPage = new ChartsViewModel(); }
-
-    [RelayCommand]
-    private void Logout()
-    {
-        MyGlobals.CurrentUser = null;
-        IsLoggedIn = false;
-        IsAdmin = false;
-        CurrentUserName = "";
-        CurrentPage = new LoginViewModel(OnLoginSuccess);
     }
 }

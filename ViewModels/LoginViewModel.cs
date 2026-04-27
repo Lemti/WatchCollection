@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using WatchCollection.Helpers;
 using WatchCollection.Models;
 using WatchCollection.Services;
 
@@ -10,58 +11,72 @@ namespace WatchCollection.ViewModels;
 public partial class LoginViewModel : ViewModelBase
 {
     private readonly Action _onLoginSuccess;
-    private MongoDbService? _mongoDbService;
+    private readonly MongoDBService _mongo;
 
-    [ObservableProperty] private string _email = "";
-    [ObservableProperty] private string _password = "";
-    [ObservableProperty] private string _firstName = "";
-    [ObservableProperty] private string _lastName = "";
-    [ObservableProperty] private string _errorMessage = "";
+    [ObservableProperty] private string _email = string.Empty;
+    [ObservableProperty] private string _password = string.Empty;
+    [ObservableProperty] private string _firstName = string.Empty;
+    [ObservableProperty] private string _lastName = string.Empty;
+    [ObservableProperty] private string _errorMessage = string.Empty;
     [ObservableProperty] private bool _isRegistering;
-    [ObservableProperty] private bool _isMongoAvailable = true;
+    [ObservableProperty] private bool _isMongoAvailable;
+    [ObservableProperty] private bool _isBusy;
+
     public Avalonia.Media.IImage? WatchHeroImage { get; }
 
     public LoginViewModel(Action onLoginSuccess)
     {
         _onLoginSuccess = onLoginSuccess;
-        _ = CheckMongoConnection();
-        try { WatchHeroImage = WatchCollection.Helpers.ImageHelper.LoadFromResource(new Uri("avares://WatchCollection/Assets/watch-hero.png")); } catch { }
-    }
+        _mongo = new MongoDBService();
+        IsMongoAvailable = _mongo.IsConnected;
 
-    public LoginViewModel() { _onLoginSuccess = () => { }; }
+        if (!IsMongoAvailable)
+        {
+            var detail = _mongo.LastError ?? "raison inconnue";
+            ErrorMessage = $"MongoDB indisponible : {detail}";
+        }
 
-    private async Task CheckMongoConnection()
-    {
         try
         {
-            _mongoDbService = new MongoDbService();
-            await _mongoDbService.GetAllUsersAsync();
-            IsMongoAvailable = true;
+            WatchHeroImage = ImageHelper.LoadFromResource(
+                new Uri("avares://WatchCollection/Assets/watch-hero.png"));
         }
         catch
         {
-            IsMongoAvailable = false;
-            ErrorMessage = "MongoDB indisponible. Vous pouvez continuer sans compte.";
         }
+    }
+
+    public LoginViewModel()
+    {
+        _onLoginSuccess = () => { };
+        _mongo = new MongoDBService();
     }
 
     [RelayCommand]
     private async Task Login()
     {
-        ErrorMessage = "";
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        ErrorMessage = string.Empty;
+
+        if (!IsValidLogin(out var validationError))
         {
-            ErrorMessage = "Veuillez remplir tous les champs.";
+            ErrorMessage = validationError;
+            return;
+        }
+
+        if (!IsMongoAvailable)
+        {
+            ErrorMessage = "Connexion impossible : MongoDB indisponible.";
             return;
         }
 
         try
         {
-            _mongoDbService ??= new MongoDbService();
-            var user = await _mongoDbService.LoginAsync(Email, Password);
-            if (user != null)
+            IsBusy = true;
+            var user = await _mongo.LoginAsync(Email.Trim(), Password);
+
+            if (user is not null)
             {
-                MyGlobals.CurrentUser = user;
+                Globals.CurrentUser = user;
                 _onLoginSuccess();
             }
             else
@@ -71,38 +86,51 @@ public partial class LoginViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Erreur de connexion à MongoDB: {ex.Message}";
+            ErrorMessage = $"Erreur de connexion : {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
     [RelayCommand]
     private async Task Register()
     {
-        ErrorMessage = "";
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password) ||
-            string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName))
+        ErrorMessage = string.Empty;
+
+        if (!IsValidRegister(out var validationError))
         {
-            ErrorMessage = "Veuillez remplir tous les champs.";
+            ErrorMessage = validationError;
+            return;
+        }
+
+        if (!IsMongoAvailable)
+        {
+            ErrorMessage = "Inscription impossible : MongoDB indisponible.";
             return;
         }
 
         try
         {
-            _mongoDbService ??= new MongoDbService();
-            var user = new User
+            IsBusy = true;
+
+            var newUser = new User
             {
-                FirstName = FirstName,
-                LastName = LastName,
-                Email = Email,
-                Password = Password,
-                Role = "user"
+                DisplayName = $"{FirstName.Trim()} {LastName.Trim()}",
+                FirstName = FirstName.Trim(),
+                LastName = LastName.Trim(),
+                Email = Email.Trim(),
+                HashedPassword = Password
             };
 
-            var success = await _mongoDbService.RegisterAsync(user);
+            var success = await _mongo.RegisterAsync(newUser);
+
             if (success)
             {
-                ErrorMessage = "Inscription réussie ! Connectez-vous.";
+                ErrorMessage = "Inscription réussie. Vous pouvez maintenant vous connecter.";
                 IsRegistering = false;
+                ClearRegisterFields();
             }
             else
             {
@@ -111,7 +139,11 @@ public partial class LoginViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Erreur: {ex.Message}";
+            ErrorMessage = $"Erreur d'inscription : {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
@@ -119,20 +151,71 @@ public partial class LoginViewModel : ViewModelBase
     private void ToggleRegister()
     {
         IsRegistering = !IsRegistering;
-        ErrorMessage = "";
+        ErrorMessage = string.Empty;
     }
 
     [RelayCommand]
     private void SkipLogin()
     {
-        // Mode sans MongoDB : créer un utilisateur local
-        MyGlobals.CurrentUser = new User
+        Globals.CurrentUser = new User
         {
+            DisplayName = "Utilisateur Local",
             FirstName = "Utilisateur",
             LastName = "Local",
             Email = "local@watchcollection.app",
-            Role = "admin"
+            Role = "Admin"
         };
         _onLoginSuccess();
+    }
+
+    private bool IsValidLogin(out string error)
+    {
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            error = "L'email est obligatoire.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            error = "Le mot de passe est obligatoire.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private bool IsValidRegister(out string error)
+    {
+        if (string.IsNullOrWhiteSpace(FirstName))
+        {
+            error = "Le prénom est obligatoire.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(LastName))
+        {
+            error = "Le nom est obligatoire.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
+        {
+            error = "Email invalide.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(Password) || Password.Length < 4)
+        {
+            error = "Le mot de passe doit contenir au moins 4 caractères.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private void ClearRegisterFields()
+    {
+        FirstName = string.Empty;
+        LastName = string.Empty;
+        Password = string.Empty;
     }
 }

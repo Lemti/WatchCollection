@@ -28,7 +28,7 @@
                                 IsVisible="{Binding !IsScannerConnected}" Classes="success" FontSize="12"/>
                         <Button Content="Déconnecter" Command="{Binding DisconnectScannerCommand}"
                                 IsVisible="{Binding IsScannerConnected}" Classes="danger" FontSize="12"/>
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="#8E8E93" FontSize="12" 
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#8E8E93" FontSize="12"
                                    VerticalAlignment="Center" FontStyle="Italic"/>
                     </StackPanel>
                 </StackPanel>
@@ -38,7 +38,7 @@
             <Border Background="White" CornerRadius="12" Padding="20" BoxShadow="0 1 4 0 #10000000">
                 <StackPanel Spacing="14">
                     <TextBlock Text="Informations" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
-                    
+
                     <StackPanel Spacing="4">
                         <TextBlock Text="Code-barre" FontSize="12" Foreground="#8E8E93"/>
                         <TextBox Text="{Binding Barcode}" Watermark="Scannez ou saisissez manuellement"/>
@@ -62,11 +62,9 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2" Spacing="4">
                             <TextBlock Text="Mouvement" FontSize="12" Foreground="#8E8E93"/>
-                            <ComboBox SelectedItem="{Binding Movement}" HorizontalAlignment="Stretch" CornerRadius="8">
-                                <ComboBoxItem Content="Automatic" IsSelected="True"/>
-                                <ComboBoxItem Content="Quartz"/>
-                                <ComboBoxItem Content="Manual"/>
-                            </ComboBox>
+                            <ComboBox ItemsSource="{Binding MovementOptions}"
+                                      SelectedItem="{Binding Movement}"
+                                      HorizontalAlignment="Stretch" CornerRadius="8"/>
                         </StackPanel>
                     </Grid>
 

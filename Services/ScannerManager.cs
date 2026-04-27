@@ -1,139 +1,187 @@
 using System;
-using System.Collections;
 using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Management;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace WatchCollection.Services;
 
-public partial class DeviceOrientationService
+/// <summary>
+/// Gère la communication avec un scanner code-barre USB (M900D ou Arduino UNO)
+/// connecté en port COM. Cross-platform : Windows et Linux.
+/// </summary>
+public sealed class ScannerManager : IDisposable
 {
-    private SerialPort? mySerialPort;
-    private string? portDetected = null;
-    public QueueBuffer SerialBuffer = new();
+    private const int BaudRate = 9600;
+    private const int ReadWriteTimeoutMs = 10000;
+    private const string DeviceIdentifier = "A4A7"; // PID du scanner M900D
 
-    public void OpenPort()
+    private SerialPort? _serialPort;
+    private bool _disposed;
+
+    /// <summary>
+    /// Événement déclenché lorsqu'un code-barre est lu.
+    /// L'argument string contient le code-barre scanné (= Barcode de la montre).
+    /// </summary>
+    public event EventHandler<string>? BarcodeScanned;
+
+    /// <summary>
+    /// Indique si le scanner est connecté et prêt.
+    /// </summary>
+    public bool IsConnected => _serialPort?.IsOpen ?? false;
+
+    /// <summary>
+    /// Tente d'ouvrir une connexion avec le scanner.
+    /// </summary>
+    public bool TryOpenPort(out string? errorMessage)
     {
-        if (mySerialPort != null)
+        errorMessage = null;
+        try
         {
-            try
+            CloseInternal();
+
+            var portName = DetectScannerPort();
+            if (portName is null)
             {
-                if (mySerialPort.IsOpen) mySerialPort.Close();
-                mySerialPort.Dispose();
+                errorMessage = "Aucun scanner détecté. Branchez le scanner USB et réessayez.";
+                return false;
             }
-            catch (Exception ex)
+
+            _serialPort = new SerialPort
             {
-                Console.WriteLine($"Erreur lors de la fermeture du port: {ex.Message}");
-            }
-            finally
-            {
-                mySerialPort = null;
-            }
+                BaudRate = BaudRate,
+                PortName = portName,
+                Parity = Parity.None,
+                DataBits = 8,
+                StopBits = StopBits.One,
+                Handshake = Handshake.None,
+                ReadTimeout = ReadWriteTimeoutMs,
+                WriteTimeout = ReadWriteTimeoutMs
+            };
+
+            _serialPort.DataReceived += OnDataReceived;
+            _serialPort.Open();
+            return true;
         }
-        else
+        catch (UnauthorizedAccessException)
         {
-            if (OperatingSystem.IsWindows())
-            {
-                var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%(COM%'");
-
-                foreach (ManagementObject queryObj in searcher.Get())
-                {
-                    string id = queryObj["PNPDeviceID"]?.ToString() ?? "";
-                    string nom = queryObj["Name"]?.ToString() ?? "";
-
-                    if (id.Contains("PID_A4A7"))
-                    {
-                        int debut = nom.LastIndexOf("COM");
-                        int fin = nom.LastIndexOf(")");
-
-                        if (debut != -1 && fin != -1)
-                        {
-                            portDetected = nom.Substring(debut, fin - debut);
-                            break;
-                        }
-                    }
-                }
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                string byId = "/dev/serial/by-id";
-
-                if (Directory.Exists(byId))
-                {
-                    foreach (var device in Directory.GetFiles(byId))
-                    {
-                        if (device.Contains("A4A7", StringComparison.OrdinalIgnoreCase))
-                        {
-                            portDetected = Path.GetFullPath(device);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (portDetected != null)
-            {
-                mySerialPort = new SerialPort
-                {
-                    BaudRate = 9600,
-                    PortName = portDetected,
-                    Parity = Parity.None,
-                    DataBits = 8,
-                    StopBits = StopBits.One,
-                    ReadTimeout = 10000,
-                    WriteTimeout = 10000
-                };
-
-                mySerialPort.DataReceived += new SerialDataReceivedEventHandler(DataHandler);
-
-                try
-                {
-                    mySerialPort.Open();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Erreur lors de l'ouverture du port: {ex.Message}");
-                }
-            }
+            errorMessage = "Le port est déjà utilisé par une autre application.";
+            CloseInternal();
+            return false;
+        }
+        catch (IOException ex)
+        {
+            errorMessage = $"Erreur de communication avec le scanner : {ex.Message}";
+            CloseInternal();
+            return false;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur inattendue : {ex.Message}";
+            CloseInternal();
+            return false;
         }
     }
 
-    public void ClosePort()
+    /// <summary>
+    /// Ferme proprement la connexion avec le scanner.
+    /// </summary>
+    public void ClosePort() => CloseInternal();
+
+    /// <summary>
+    /// Détecte le port COM du scanner selon le système d'exploitation.
+    /// </summary>
+    private static string? DetectScannerPort()
     {
-        if (mySerialPort != null && mySerialPort.IsOpen)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return DetectScannerOnWindows();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return DetectScannerOnLinux();
+
+        return null;
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static string? DetectScannerOnWindows()
+    {
+        // WMI : récupère les périphériques connectés et trouve celui correspondant au PID du scanner
+        using var searcher = new System.Management.ManagementObjectSearcher(
+            "SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%(COM%'");
+
+        foreach (var device in searcher.Get())
         {
-            try
-            {
-                mySerialPort.Close();
-                mySerialPort.Dispose();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors de la fermeture du port: {ex.Message}");
-            }
-            finally
-            {
-                mySerialPort = null;
-            }
+            var pnpId = device["PNPDeviceID"]?.ToString() ?? string.Empty;
+            var name = device["Name"]?.ToString() ?? string.Empty;
+
+            if (!pnpId.Contains($"PID_{DeviceIdentifier}", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var start = name.LastIndexOf("COM", StringComparison.Ordinal);
+            var end = name.LastIndexOf(')');
+
+            if (start >= 0 && end > start)
+                return name.Substring(start, end - start);
+        }
+        return null;
+    }
+
+    private static string? DetectScannerOnLinux()
+    {
+        const string serialDir = "/dev/serial/by-id";
+        if (!Directory.Exists(serialDir))
+            return null;
+
+        foreach (var device in Directory.GetFiles(serialDir))
+        {
+            if (device.Contains(DeviceIdentifier, StringComparison.OrdinalIgnoreCase))
+                return Path.GetFullPath(device);
+        }
+        return null;
+    }
+
+    private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
+    {
+        try
+        {
+            if (sender is not SerialPort port || !port.IsOpen) return;
+
+            var rawData = port.ReadExisting();
+            var barcode = rawData.Trim('\r', '\n', ' ');
+
+            if (!string.IsNullOrEmpty(barcode))
+                BarcodeScanned?.Invoke(this, barcode);
+        }
+        catch (IOException)
+        {
+            // Erreur de lecture transitoire : on ignore, le scanner peut envoyer des trames partielles
         }
     }
 
-    private void DataHandler(object sender, EventArgs arg)
+    private void CloseInternal()
     {
-        SerialPort sp = (SerialPort)sender;
-        SerialBuffer.Enqueue(sp.ReadExisting());
+        if (_serialPort is null) return;
+
+        try
+        {
+            _serialPort.DataReceived -= OnDataReceived;
+            if (_serialPort.IsOpen) _serialPort.Close();
+            _serialPort.Dispose();
+        }
+        catch (IOException)
+        {
+            // Port déjà fermé ou inaccessible : on ignore proprement
+        }
+        finally
+        {
+            _serialPort = null;
+        }
     }
 
-    public sealed partial class QueueBuffer : Queue
+    public void Dispose()
     {
-        public event EventHandler? Changed;
-        public override void Enqueue(object? obj)
-        {
-            base.Enqueue(obj);
-            Changed?.Invoke(this, EventArgs.Empty);
-        }
+        if (_disposed) return;
+        CloseInternal();
+        _disposed = true;
     }
 }

@@ -10,62 +10,86 @@ namespace WatchCollection.ViewModels;
 
 public partial class UsersViewModel : ViewModelBase
 {
-    private readonly MongoDbService _mongoDbService = new();
+    private readonly MongoDBService _mongo = new();
 
     public ObservableCollection<User> Users { get; } = [];
 
-    [ObservableProperty] private string _newFirstName = "";
-    [ObservableProperty] private string _newLastName = "";
-    [ObservableProperty] private string _newEmail = "";
-    [ObservableProperty] private string _newPassword = "";
-    [ObservableProperty] private string _statusMessage = "";
+    [ObservableProperty] private string _newFirstName = string.Empty;
+    [ObservableProperty] private string _newLastName = string.Empty;
+    [ObservableProperty] private string _newEmail = string.Empty;
+    [ObservableProperty] private string _newPassword = string.Empty;
+    [ObservableProperty] private string _statusMessage = string.Empty;
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private bool _isDatabaseAvailable;
 
     public UsersViewModel()
     {
-        _ = LoadUsers();
+        IsDatabaseAvailable = _mongo.IsConnected;
+
+        if (!IsDatabaseAvailable)
+        {
+            StatusMessage = "MongoDB indisponible — la gestion des utilisateurs nécessite une connexion.";
+            return;
+        }
+
+        _ = LoadUsersAsync();
     }
 
-    private async Task LoadUsers()
+    private async Task LoadUsersAsync()
     {
         try
         {
+            IsBusy = true;
             Users.Clear();
-            var users = await _mongoDbService.GetAllUsersAsync();
-            foreach (var user in users) Users.Add(user);
+
+            var users = await _mongo.GetAllUsersAsync();
+            foreach (var user in users)
+                Users.Add(user);
+
+            StatusMessage = $"{Users.Count} utilisateur(s) chargé(s).";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Erreur chargement: {ex.Message}";
+            StatusMessage = $"Erreur de chargement : {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
     [RelayCommand]
+    private async Task RefreshUsers() => await LoadUsersAsync();
+
+    [RelayCommand]
     private async Task AddUser()
     {
-        if (string.IsNullOrWhiteSpace(NewFirstName) || string.IsNullOrWhiteSpace(NewLastName) ||
-            string.IsNullOrWhiteSpace(NewEmail) || string.IsNullOrWhiteSpace(NewPassword))
+        if (!IsValid(out var validationError))
         {
-            StatusMessage = "Veuillez remplir tous les champs.";
+            StatusMessage = validationError;
             return;
         }
 
         try
         {
-            var user = new User
+            IsBusy = true;
+
+            var newUser = new User
             {
-                FirstName = NewFirstName,
-                LastName = NewLastName,
-                Email = NewEmail,
-                Password = NewPassword,
-                Role = "user"
+                DisplayName = $"{NewFirstName.Trim()} {NewLastName.Trim()}",
+                FirstName = NewFirstName.Trim(),
+                LastName = NewLastName.Trim(),
+                Email = NewEmail.Trim(),
+                HashedPassword = NewPassword
             };
 
-            var success = await _mongoDbService.RegisterAsync(user);
+            var success = await _mongo.RegisterAsync(newUser);
+
             if (success)
             {
-                StatusMessage = "Utilisateur ajouté !";
-                NewFirstName = ""; NewLastName = ""; NewEmail = ""; NewPassword = "";
-                await LoadUsers();
+                StatusMessage = $"Utilisateur '{newUser.Email}' ajouté.";
+                ClearForm();
+                await LoadUsersAsync();
             }
             else
             {
@@ -74,22 +98,87 @@ public partial class UsersViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Erreur: {ex.Message}";
+            StatusMessage = $"Erreur lors de l'ajout : {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
     [RelayCommand]
     private async Task DeleteUser(string email)
     {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            StatusMessage = "Email invalide pour la suppression.";
+            return;
+        }
+
+        if (Globals.CurrentUser?.Email == email)
+        {
+            StatusMessage = "Vous ne pouvez pas supprimer le compte actuellement connecté.";
+            return;
+        }
+
         try
         {
-            await _mongoDbService.DeleteUserAsync(email);
-            StatusMessage = "Utilisateur supprimé.";
-            await LoadUsers();
+            IsBusy = true;
+
+            var success = await _mongo.DeleteUserAsync(email);
+
+            if (success)
+            {
+                StatusMessage = $"Utilisateur '{email}' supprimé.";
+                await LoadUsersAsync();
+            }
+            else
+            {
+                StatusMessage = "La suppression a échoué.";
+            }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Erreur: {ex.Message}";
+            StatusMessage = $"Erreur lors de la suppression : {ex.Message}";
         }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private bool IsValid(out string error)
+    {
+        if (string.IsNullOrWhiteSpace(NewFirstName))
+        {
+            error = "Le prénom est obligatoire.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(NewLastName))
+        {
+            error = "Le nom est obligatoire.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(NewEmail) || !NewEmail.Contains('@'))
+        {
+            error = "Email invalide.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(NewPassword) || NewPassword.Length < 4)
+        {
+            error = "Le mot de passe doit contenir au moins 4 caractères.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private void ClearForm()
+    {
+        NewFirstName = string.Empty;
+        NewLastName = string.Empty;
+        NewEmail = string.Empty;
+        NewPassword = string.Empty;
     }
 }

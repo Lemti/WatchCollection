@@ -19,7 +19,7 @@ public partial class ChartsViewModel : ViewModelBase
     public ChartsViewModel()
     {
         // Graphique 1 : Stock par marque
-        var brandGroups = MyGlobals.MyWatches
+        var brandGroups = Globals.MyWatches
             .GroupBy(w => w.Brand)
             .Select(g => new { Brand = g.Key, Count = g.Sum(w => w.Stock) })
             .ToList();
@@ -31,7 +31,7 @@ public partial class ChartsViewModel : ViewModelBase
         } as ISeries).ToArray();
 
         // Graphique 2 : Répartition par mouvement
-        var movementGroups = MyGlobals.MyWatches
+        var movementGroups = Globals.MyWatches
             .GroupBy(w => w.Movement)
             .Select(g => new { Movement = g.Key, Count = g.Count() })
             .ToList();
@@ -43,7 +43,7 @@ public partial class ChartsViewModel : ViewModelBase
         } as ISeries).ToArray();
 
         // Graphique 3 : Prix par modèle (barres horizontales avec couleurs)
-        var watches = MyGlobals.MyWatches
+        var watches = Globals.MyWatches
             .OrderByDescending(w => w.Price)
             .ToList();
 
@@ -59,7 +59,7 @@ public partial class ChartsViewModel : ViewModelBase
                 DataLabelsPaint = new SolidColorPaint(SKColors.Black),
                 DataLabelsSize = 12,
                 DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End,
-                DataLabelsFormatter = point => $"{point.PrimaryValue:N0} €"            }
+                DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue:N0} €"            }
         };
 
         PriceYAxes = new[]

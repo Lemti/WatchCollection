@@ -8,18 +8,24 @@ public class User
     [BsonId]
     public ObjectId Id { get; set; } = ObjectId.Empty;
 
-    [BsonElement("firstName")]
+    [BsonElement("DisplayName")]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [BsonElement("FirstName")]
     public string FirstName { get; set; } = string.Empty;
 
-    [BsonElement("lastName")]
+    [BsonElement("LastName")]
     public string LastName { get; set; } = string.Empty;
 
-    [BsonElement("email")]
+    [BsonElement("Email")]
     public string Email { get; set; } = string.Empty;
 
-    [BsonElement("password")]
-    public string Password { get; set; } = string.Empty;
+    [BsonElement("HashedPassword")]
+    public string HashedPassword { get; set; } = string.Empty;
 
-    [BsonElement("role")]
-    public string Role { get; set; } = "user";
+    [BsonElement("Role")]
+    public string Role { get; set; } = "User";
+
+    [BsonIgnore]
+    public bool IsAdminBadge => Role == "Admin";
 }

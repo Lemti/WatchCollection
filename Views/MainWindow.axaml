@@ -8,12 +8,12 @@
         x:DataType="vm:MainWindowViewModel"
         x:Name="Main"
         Icon="/Assets/avalonia-logo.ico"
-        Title="WatchCollection"
+        Title="WatchCollection — Version 1.1"
         Background="#F5F5F7">
 
-    <Window.DataContext>
+    <Design.DataContext>
         <vm:MainWindowViewModel/>
-    </Window.DataContext>
+    </Design.DataContext>
 
     <Panel>
         <Grid ColumnDefinitions="220,*" IsVisible="{Binding IsLoggedIn}">
@@ -26,22 +26,26 @@
                         <TextBlock Text="{Binding CurrentUserName}" FontSize="12" Foreground="#8E8E93" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <Button DockPanel.Dock="Bottom" Content="Déconnexion" Command="{Binding LogoutCommand}"
-                            Classes="ghost" HorizontalAlignment="Left" Foreground="#FF3B30" FontSize="12"
-                            Margin="8,10,0,0"/>
+                    <!-- Bas de sidebar : Déconnexion + Version -->
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="8,10,0,0">
+                        <Button Content="Déconnexion" Command="{Binding LogoutCommand}"
+                                Classes="ghost" HorizontalAlignment="Left" Foreground="#FF3B30" FontSize="12"/>
+                        <TextBlock Text="{Binding AppVersion}" FontSize="10" Foreground="#C7C7CC"
+                                   HorizontalAlignment="Left" Margin="5,4,0,0"/>
+                    </StackPanel>
 
                     <StackPanel Spacing="2">
-                        <TextBlock Text="COLLECTION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93" 
+                        <TextBlock Text="COLLECTION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93"
                                    Margin="8,0,0,8"/>
                         <Button Content="Mes montres" Command="{Binding BackToMainCommand}" Classes="sidebar"/>
                         <Button Content="Ajouter une montre" Command="{Binding GoToAddWatchCommand}" Classes="sidebar"/>
-                        
-                        <TextBlock Text="ANALYSE" FontSize="10" FontWeight="Bold" Foreground="#8E8E93" 
+
+                        <TextBlock Text="ANALYSE" FontSize="10" FontWeight="Bold" Foreground="#8E8E93"
                                    Margin="8,18,0,8"/>
                         <Button Content="Graphiques" Command="{Binding GoToChartsCommand}" Classes="sidebar"/>
 
                         <StackPanel IsVisible="{Binding IsAdmin}" Margin="0,15,0,0">
-                            <TextBlock Text="ADMINISTRATION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93" 
+                            <TextBlock Text="ADMINISTRATION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93"
                                        Margin="8,0,0,8"/>
                             <Button Content="Utilisateurs" Command="{Binding GoToUsersCommand}" Classes="sidebar"/>
                         </StackPanel>
