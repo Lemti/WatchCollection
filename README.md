@@ -1,74 +1,65 @@
 # WatchCollection
 
-Application de gestion de collection horlogère développée en Avalonia UI / .NET 10
-dans le cadre du cours .NET III à HELB-Ilya Prigogine (Bachelier en Informatique de Gestion,
-finalité Mobile Development).
+> Projet académique de seconde session — HELB Ilya Prigogine, Bachelor en informatique de gestion, .NET III (2025-2026)
+
+Application multiplateforme de gestion d'une collection privée de montres, développée en C# / .NET 10 avec Avalonia UI 11 et MongoDB. Le logiciel permet l'acquisition de montres via scanner USB, la persistance distribuée (MongoDB privé + serveur JSON académique), l'import et l'export CSV, ainsi qu'une visualisation analytique de la collection.
 
 ## Auteurs
 
-- **Harith Lemti** — Conception, développement, intégration MongoDB, logique d'import CSV
-- **Younes Loukili** — Conception, développement, fonctionnalités UI
+- **Harith Lemti** — auteur principal
+- **Younes Loukili** — co-auteur
 
-## Encadrement
+## Description fonctionnelle
 
-Frédéric Van Goethem — Enseignant titulaire du cours .NET III, HELB-Ilya Prigogine.
+L'application répond à un cahier des charges (v4.0) de gestion d'objets collectionnables, avec les contraintes suivantes :
 
-## Description
-
-WatchCollection est une application de bureau permettant à un utilisateur de
-gérer une collection personnelle de montres. Elle propose les fonctionnalités
-attendues d'une application CRUD multi-utilisateurs : authentification,
-gestion d'une base privée par utilisateur, ajout, modification, suppression
-et consultation, ainsi que l'import et l'export de la collection au format CSV.
-
-L'application se distingue par une logique d'import CSV robuste, conçue
-autour des bonnes pratiques de l'ingénierie de données (clé naturelle composite,
-sémantique PATCH, idempotence, fusion identitaire).
+- Acquisition d'identifiants via scanner USB (port série), avec saisie manuelle en alternative.
+- Persistance privée par utilisateur dans une base MongoDB (collection `Users` + `Watches` liées par `OwnerId`).
+- Échange via un serveur JSON académique commun pour la résilience hors-ligne.
+- Import et export CSV avec choix des colonnes à exporter.
+- Authentification avec hashage PBKDF2 (recommandation OWASP).
+- Visualisations analytiques (camemberts, histogrammes) via LiveChartsCore.
 
 ## Architecture
 
-### Patron MVVM
+Le projet suit une architecture **MVVM** stricte avec séparation des responsabilités :
 
-L'application suit strictement le patron Model-View-ViewModel grâce à la
-bibliothèque `CommunityToolkit.Mvvm` :
-
-- `Models/` — Entités du domaine (User, Watch).
-- `Views/` — Interfaces utilisateur en AXAML.
-- `ViewModels/` — Logique de présentation et liaison avec les vues.
-- `Services/` — Accès aux données (MongoDB) et import/export (CSV, JSON).
-- `Helpers/` — Utilitaires transverses (scanner code-barre, etc.).
-
-### Persistance
-
-La persistance est assurée par MongoDB, hébergée sur un serveur académique
-mis à disposition par l'enseignement. Deux collections sont utilisées :
-
-- `Users` — Comptes utilisateurs et rôles.
-- `Watches` — Montres rattachées à un utilisateur via un champ `OwnerId`.
-
-Deux index optimisent les opérations fréquentes :
-
-- `ux_users_email` — Index unique sur l'adresse e-mail (unicité des comptes).
-- `ix_watches_owner` — Index sur `OwnerId` (filtrage rapide par utilisateur).
+```
+WatchCollection/
+├── Models/             # Entités du domaine (Watch, User, ExportColumn)
+├── ViewModels/         # Logique de présentation et de navigation
+├── Views/              # Interfaces utilisateur Avalonia (.axaml)
+├── Services/           # Accès aux données et matériel
+│   ├── MongoDBService    # Persistance MongoDB
+│   ├── JSONServices      # Communication serveur JSON académique
+│   ├── CSVServices       # Import/export CSV
+│   └── ScannerManager    # Scanner USB cross-platform
+├── Helpers/            # ImageHelper, conversions
+├── Styles/             # Palette + styles centralisés (luxe horloger)
+└── Assets/             # Images, icônes, polices embarquées
+    └── Fonts/          # Inter + Playfair Display (rendu identique partout)
+```
 
 ## Pile technologique
 
-- **.NET 10** — Framework cible (`net10.0`).
-- **Avalonia 11** — Framework UI multiplateforme.
-- **MongoDB.Driver 3.6** — Client officiel MongoDB pour .NET.
-- **CommunityToolkit.Mvvm** — Génération de propriétés observables et de commandes
-  via attributs source generators.
-- **LiveChartsCore.SkiaSharpView.Avalonia** — Rendu de graphiques pour la vue d'analyse.
+| Couche | Technologie |
+|---|---|
+| Framework | .NET 10 |
+| UI | Avalonia 11.3.11 + FluentTheme |
+| MVVM | CommunityToolkit.Mvvm 8.2 |
+| Base de données | MongoDB 2.28 |
+| Visualisations | LiveChartsCore.SkiaSharpView 2.0 |
+| Polices | Inter + Playfair Display (embarquées) |
+| Scanner USB | System.IO.Ports + System.Management (Windows) |
 
-## Installation et configuration
+## Installation et lancement
 
 ### Prérequis
 
-- SDK .NET 10 ou supérieur.
-- Accès réseau au serveur MongoDB du cours.
-- (Optionnel) JetBrains Rider ou Visual Studio 2022 pour le développement.
+- .NET 10 SDK installé ([dotnet.microsoft.com](https://dotnet.microsoft.com/))
+- Accès réseau au serveur MongoDB académique (port 443 sortant)
 
-### Compilation et exécution
+### Cloner et lancer
 
 ```bash
 git clone https://github.com/Lemti/WatchCollection.git
@@ -78,185 +69,117 @@ dotnet build
 dotnet run
 ```
 
-### Configuration MongoDB
+### Build de production (Linux x64)
 
-Les paramètres de connexion sont déclarés dans `Services/MongoDBService.cs`.
-La chaîne de connexion par défaut pointe vers le serveur académique fourni.
+```bash
+dotnet publish -c Release -r linux-x64 --self-contained true
+```
 
-## Fonctionnalités
+## Identifiants de test
 
-### Authentification et gestion des comptes
+Au premier lancement, créer un compte via la page d'inscription. Le **premier utilisateur enregistré devient automatiquement Admin** ; les suivants sont `User` standard.
 
-- Inscription avec validation des champs (nom, prénom, e-mail, mot de passe).
-- Connexion par e-mail et mot de passe.
-- Hashage des mots de passe via PBKDF2 (RFC 2898), 10 000 itérations,
-  recommandé par l'OWASP. Plus robuste qu'un SHA-256 simple ou qu'un bcrypt
-  pour les volumes attendus.
-- Le premier utilisateur inscrit obtient automatiquement le rôle
-  d'administrateur, conformément au cahier des charges.
-- Mode hors-ligne fonctionnel : si le serveur MongoDB est indisponible,
-  l'application reste utilisable en mémoire avec un message clair.
+## Fonctionnalités principales
 
-### Collection de montres
+### Authentification et collection privée
 
-- Ajout, consultation, modification et suppression des montres.
-- Champs gérés : code-barre, marque, modèle, référence, mouvement,
-  diamètre, matériau, prix, année, stock.
-- Validation systématique avant enregistrement (intervalles de diamètre,
-  d'année, de prix, de stock).
-- Tri serveur par marque puis modèle.
-- Vue d'analyse avec graphiques (répartition par marque, par mouvement,
-  valorisation totale).
+Chaque utilisateur dispose d'une collection privée. Les administrateurs voient toutes les montres de la base, les utilisateurs standards uniquement les leurs. Les mots de passe sont hashés via **PBKDF2** (10 000 itérations, sel statique applicatif), conformément à la recommandation OWASP pour le stockage de credentials.
 
-### Import et export CSV
+### Acquisition par scanner USB
 
-L'import et l'export CSV sont les fonctionnalités les plus travaillées
-de l'application. Elles répondent aux exigences du cahier des charges
-tout en intégrant des concepts d'ingénierie de données.
+L'application détecte automatiquement les ports série disponibles (cross-platform via `System.IO.Ports`). Le scanner émet le code-barre lu, qui est répercuté dans le champ correspondant du formulaire d'ajout. Le code-barre joue le rôle d'identifiant unique de la montre dans la collection (clé d'unicité primaire).
 
-#### Algorithme d'import
+### Mode hors-ligne (résilience réseau)
 
-Pour chaque ligne du fichier CSV, l'application applique la séquence suivante :
+L'application gère explicitement la perte de connectivité au serveur MongoDB :
 
-1. **Recherche par code-barre** (clé d'unicité primaire). Si une montre
-   du même utilisateur possède le code-barre du fichier, elle est mise à jour.
-2. **Recherche par triplet `Brand + Model + Reference`** (clé naturelle
-   composite). Utilisée comme fallback lorsque le code-barre est absent.
-3. **Insertion** comme nouvelle montre dans tous les autres cas.
+1. Au démarrage, un ping de 10 secondes vérifie la disponibilité du serveur.
+2. En cas d'échec, l'authentification standard est désactivée et un message explicite s'affiche.
+3. Un lien permanent **« Tester en mode hors-ligne »** sur la page de connexion permet l'accès à l'application avec un utilisateur placeholder (`Role = User`).
+4. Les données sont chargées en cascade : MongoDB → serveur JSON académique → données d'exemple en mémoire.
+5. Les opérations CRUD restent fonctionnelles en mémoire pendant la session hors-ligne.
 
-Cette double clé permet à l'utilisateur d'importer un CSV partiel
-(par exemple sans code-barre) sans introduire de doublons.
+### Import CSV avec déduplication intelligente
 
-#### Sémantique PATCH (fusion enrichissante)
+L'algorithme d'import CSV implémente plusieurs concepts issus de la modélisation de données :
 
-Lorsqu'une montre existante est trouvée, seuls les champs présents et
-non vides du CSV sont mis à jour. Les champs absents ou vides du CSV
-sont conservés tels quels en base.
+#### 1. Match double-clé
 
-Cette logique correspond à la sémantique HTTP PATCH (mise à jour
-partielle) plutôt qu'à PUT (remplacement complet). Elle permet par
-exemple à l'utilisateur d'importer un CSV ne contenant que des prix
-mis à jour, sans perdre les autres informations.
+Pour chaque ligne du fichier CSV, la déduplication tente d'abord une correspondance par **`Barcode`** (clé d'unicité primaire). En cas d'absence ou de non-correspondance, l'algorithme tombe sur une **clé naturelle composite** `Brand + Model + Reference`, classique en data warehousing.
 
-#### Idempotence et choix REPLACE plutôt qu'ADD
+#### 2. Fusion enrichissante (sémantique PATCH)
 
-Le champ `Stock` suit la même logique de remplacement que les autres
-champs : si le CSV indique `Stock = 5`, la valeur en base devient `5`,
-et non `stockExistant + 5`.
+Lorsqu'une montre déjà présente est retrouvée, les champs non vides du CSV viennent **enrichir** la montre existante sans écraser les valeurs déjà saisies (sémantique d'un `HTTP PATCH`, par opposition à `PUT` qui remplacerait l'enregistrement). Cette approche permet d'utiliser un CSV partiel pour mettre à jour ponctuellement certains champs.
 
-Ce choix garantit l'**idempotence** de l'import : appliquer le même
-CSV deux fois produit le même résultat qu'une seule application. Cette
-propriété protège l'utilisateur contre les réimports accidentels.
+#### 3. Idempotence du stock (REPLACE et non ADD)
 
-Une logique d'incrémentation aurait été pertinente dans un contexte
-de gestion de stock magasin (livraisons cumulées), mais elle n'a pas
-de sens pour une collection horlogère personnelle, qui décrit un état
-plutôt qu'un journal d'opérations. Cette interprétation est cohérente
-avec les pratiques observées dans les outils ETL standards
-(Excel, Notion, Airtable).
+Le champ `Stock` est **remplacé** et non additionné. Justification :
 
-#### Fusion identitaire
+- L'idempotence : importer N fois le même CSV doit produire le même résultat.
+- La sémantique : la collection privée n'est pas un stock magasin où l'on incrémente.
+- Cohérence avec les ETL standards (Excel, Notion, Airtable).
 
-Si une modification (par import ou édition manuelle) rend une montre
-identique à une autre montre du même utilisateur (même triplet
-`Brand + Model + Reference`), une fusion est proposée. Dans ce cas
-spécifique, et uniquement dans celui-ci, les stocks sont **additionnés**
-plutôt que remplacés, afin de ne pas perdre l'inventaire de la fiche
-qui sera supprimée.
+#### 4. Fusion identitaire (twin merge)
 
-À l'import, la fusion est automatique. À la modification manuelle,
-elle requiert une confirmation explicite de l'utilisateur via un
-dialogue dédié.
+Si après mise à jour, la montre devient strictement identique (au sens de la clé naturelle) à une autre montre déjà présente dans la collection, une **boîte de dialogue** propose à l'utilisateur de fusionner les deux entités, en additionnant leurs stocks et en supprimant le doublon. L'utilisateur peut annuler la fusion.
 
-#### Gestion des fichiers corrompus
+### Export CSV avec sélection de colonnes
 
-L'import CSV traite chaque ligne dans un bloc `try/catch` indépendant.
-Une ligne malformée (champ numérique invalide, colonnes manquantes)
-est ignorée et comptabilisée dans un rapport, sans interrompre
-l'import des lignes valides.
+L'utilisateur peut choisir, via une liste de cases à cocher, les colonnes à inclure dans l'export. Le CSV produit est encodé en UTF-8 avec BOM, séparateur `;`, compatible Excel et Notion.
 
-À la fin de l'import, l'utilisateur reçoit un message détaillé indiquant :
+### Visualisations
 
-- le nombre de montres ajoutées,
-- le nombre de montres mises à jour,
-- le nombre de montres fusionnées (cas de fusion identitaire),
-- le nombre de lignes ignorées pour cause de format invalide,
-- la liste des montres incomplètes nécessitant une saisie manuelle.
+La page Graphiques affiche, via LiveChartsCore :
 
-### Validation et retours utilisateur
-
-Toutes les opérations affichent un retour utilisateur via la propriété
-`StatusMessage` du ViewModel concerné. Les erreurs sont caractérisées
-(non disponibilité du serveur, validation, conflits) et présentées
-de façon non-bloquante.
-
-### Scanner code-barre (multiplateforme)
-
-Le module `ScannerManager` détecte les périphériques USB de type scanner
-sur Windows via WMI (`System.Management`). Sur les autres systèmes
-d'exploitation, le module se neutralise proprement grâce à de la
-compilation conditionnelle, garantissant la portabilité du code.
-
-L'événement `BarcodeScanned` est bindé sur la propriété `Barcode` du
-formulaire d'ajout, et non sur l'identifiant interne (`ObjectId`).
-
-## Sécurité
-
-- Mots de passe non stockés en clair (PBKDF2 avec sel et 10 000 itérations).
-- Index unique sur l'e-mail empêchant les comptes en double.
-- Filtrage des accès aux données par `OwnerId` : un utilisateur ne peut
-  pas accéder aux montres d'un autre.
-- Aucun appel `Console.WriteLine` ni log non contrôlé en production.
+- Camembert du stock par marque
+- Camembert des types de mouvements
+- Histogramme comparatif des prix
 
 ## Choix techniques notables
 
-### Champ de propriété `OwnerId` côté `Watch` plutôt que `WatchIds[]` côté `User`
+### Modélisation MongoDB : `OwnerId` côté Watch
 
-Deux modélisations sont possibles pour la relation utilisateur-montre :
+Plutôt que de stocker `WatchIds[]` côté `User`, chaque montre porte un champ `OwnerId` indexé. Avantages :
 
-- Tableau d'identifiants `WatchIds[]` côté `User`.
-- Champ `OwnerId` côté `Watch`.
+- Opérations atomiques (ajout/suppression d'une montre = un seul document).
+- Filtrage performant (index dédié `ix_watches_owner`).
+- Scalabilité (pas de tableau qui grossit indéfiniment dans le document utilisateur).
+- Pattern relationnel standard appliqué à MongoDB.
 
-Le second pattern a été retenu car :
+### Indexation
 
-- Il évite la duplication d'information (un seul endroit où la relation
-  est stockée).
-- Les opérations CRUD sur les montres restent atomiques (une seule
-  écriture, contre deux dans le pattern tableau).
-- Il est plus performant pour la requête la plus fréquente (lister les
-  montres d'un utilisateur), grâce à l'index `ix_watches_owner`.
-- C'est le pattern standard en modélisation relationnelle (clé étrangère).
+Deux index sont créés au démarrage :
 
-### Champ `Role` typé `string` plutôt que `bool` ou `int`
+- `ux_users_email` (unique) : empêche les doublons d'inscription.
+- `ix_watches_owner` : accélère le filtrage de la collection privée.
 
-Le champ `Role` accepte les valeurs `"Admin"` ou `"User"`. Une chaîne
-de caractères est plus extensible qu'un booléen `IsAdmin` ou qu'un
-entier `Role: 1|2`, et plus lisible directement dans la base de données.
+### Rôle utilisateur stocké comme `string`
 
-## Tests fonctionnels effectués
+Le champ `Role` est un `string` (`"Admin"` ou `"User"`) plutôt qu'un booléen `IsAdmin` ou un enum sérialisé en entier. Cela permet une évolution future (ajout de rôles intermédiaires) sans migration de données.
 
-L'algorithme d'import CSV a été validé par huit cas de test distincts :
+### Polices embarquées
 
-| # | Scénario | Résultat attendu |
+Inter et Playfair Display sont embarqués comme `AvaloniaResource` plutôt que chargées depuis le système. Cela garantit un rendu identique sur tous les postes (Windows, Linux, macOS), indépendamment des polices installées localement.
+
+### Direction esthétique
+
+L'interface adopte une direction **« Maison Horlogère »** : palette noir profond + or champagne + crème, typographie serif (Playfair Display) pour les titres et sans-serif (Inter) pour le corps. Cohérent avec le domaine fonctionnel (collection de montres de luxe).
+
+## Tests fonctionnels validés
+
+| # | Scénario | Résultat |
 |---|---|---|
-| 1 | Import frais de 15 montres dans une base vide | 15 lignes ajoutées |
-| 2 | Réimport du même fichier | 15 lignes mises à jour, aucun doublon |
-| 3 | Import sans code-barre, avec triplet identifiant | Mise à jour par triplet, code-barre conservé |
-| 4 | Import partiel d'une montre incomplète | Insertion avec avertissement listant les champs manquants |
-| 5 | Import partiel mettant à jour le stock | Stock remplacé par la valeur du CSV (REPLACE) |
-| 6 | Modification manuelle créant un doublon de triplet | Dialogue de confirmation puis fusion (stocks additionnés) |
-| 6 bis | Annulation de la fusion depuis le dialogue | Aucune modification persistée, formulaire conservé |
-| Bonus | Import d'un fichier comportant des lignes corrompues | Lignes valides importées, lignes invalides comptées et ignorées |
+| 1 | Login normal MongoDB | OK |
+| 2 | Login en mode hors-ligne | OK |
+| 3 | Ajout manuel d'une montre | OK |
+| 4 | Ajout via scanner USB | OK |
+| 5 | Modification d'une montre | OK |
+| 6 | Suppression d'une montre | OK |
+| 7 | Import CSV avec déduplication par Barcode | OK |
+| 8 | Import CSV avec déduplication par clé naturelle | OK |
+| 9 | Import CSV avec fusion identitaire (popup) | OK |
+| 10 | Import CSV en mode hors-ligne | OK |
+| 11 | Export CSV avec sélection de colonnes | OK |
+| 12 | Visualisations (camemberts, histogramme) | OK |
+| 13 | Gestion utilisateurs (admin uniquement) | OK |
 
-## Limitations connues
-
-- L'application ne gère pas encore le téléversement d'images de montres
-  (le champ `Picture` est prévu en modèle mais non interfacé).
-- L'import JSON utilise un serveur partagé fourni par l'enseignement
-  et n'est pas branché à la logique de propriété par utilisateur.
-- Aucun test unitaire automatisé n'est inclus dans cette livraison.
-
-## Licence
-
-Projet académique, distribué sans licence formelle.
-Toute réutilisation doit être préalablement convenue avec les auteurs.
