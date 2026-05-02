@@ -199,7 +199,7 @@ public sealed class MongoDBService
             var result = await _users.ReplaceOneAsync(
                 Builders<User>.Filter.Eq(u => u.Id, user.Id),
                 user);
-            return result.ModifiedCount > 0;
+            return result.IsAcknowledged && result.MatchedCount > 0;
         }
         catch (Exception ex)
         {
@@ -344,6 +344,7 @@ public sealed class MongoDBService
             return false;
         }
     }
+
     public async Task<bool> DeleteWatchAsync(ObjectId watchId)
     {
         if (!IsConnected || _watches is null) return false;

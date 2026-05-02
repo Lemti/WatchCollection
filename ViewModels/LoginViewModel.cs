@@ -52,6 +52,19 @@ public partial class LoginViewModel : ViewModelBase
         _mongo = new MongoDBService();
     }
 
+    /// <summary>
+    /// Commande dispatchée par la touche Enter sur les champs du formulaire.
+    /// Route vers Login ou Register selon le mode actif.
+    /// </summary>
+    [RelayCommand]
+    private async Task Submit()
+    {
+        if (IsRegistering)
+            await Register();
+        else
+            await Login();
+    }
+
     [RelayCommand]
     private async Task Login()
     {
@@ -157,13 +170,14 @@ public partial class LoginViewModel : ViewModelBase
     [RelayCommand]
     private void SkipLogin()
     {
+        // Mode hors-ligne / démo : bypass de l'authentification MongoDB.
+        // L'utilisateur a Role=User (pas Admin) pour rester cohérent avec l'absence
+        // d'authentification réelle. Les opérations CRUD restent en mémoire,
+        // les modifications ne sont pas persistées en base de données.
         Globals.CurrentUser = new User
         {
-            DisplayName = "Utilisateur Local",
-            FirstName = "Utilisateur",
-            LastName = "Local",
-            Email = "local@watchcollection.app",
-            Role = "Admin"
+            DisplayName = "Mode Hors-ligne",
+            Role = "User"
         };
         _onLoginSuccess();
     }

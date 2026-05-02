@@ -14,6 +14,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private ViewModelBase? _currentPage;
     [ObservableProperty] private bool _isLoggedIn;
     [ObservableProperty] private bool _isAdmin;
+    [ObservableProperty] private bool _isDatabaseAvailable;
     [ObservableProperty] private string _currentUserName = string.Empty;
     [ObservableProperty] private string _statusMessage = string.Empty;
 
@@ -32,6 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel()
     {
         CurrentPage = new LoginViewModel(OnLoginSuccessRequested);
+        IsDatabaseAvailable = Globals.IsDatabaseAvailable;
     }
 
     /// <summary>
@@ -78,15 +80,19 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     // ===== Callbacks =====
-    // Ces méthodes sont des callbacks invoqués par les enfants. Elles déclenchent
-    // une opération asynchrone via une commande dédiée (LoadAfterLoginCommand)
-    // au lieu d'utiliser async void (anti-pattern).
 
     private void OnLoginSuccessRequested()
     {
         IsLoggedIn = true;
         IsAdmin = Globals.IsAdmin;
-        CurrentUserName = $"{Globals.CurrentUser?.FirstName} {Globals.CurrentUser?.LastName}".Trim();
+        IsDatabaseAvailable = Globals.IsDatabaseAvailable;
+
+        // Préfère DisplayName s'il est défini (cas hors-ligne où First/Last sont vides),
+        // sinon "Prénom Nom", sinon fallback "Utilisateur Local"
+        CurrentUserName = !string.IsNullOrWhiteSpace(Globals.CurrentUser?.DisplayName)
+            ? Globals.CurrentUser.DisplayName
+            : $"{Globals.CurrentUser?.FirstName} {Globals.CurrentUser?.LastName}".Trim();
+
         if (string.IsNullOrWhiteSpace(CurrentUserName))
             CurrentUserName = "Utilisateur Local";
 
@@ -101,110 +107,98 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Charge les montres depuis le serveur JSON après connexion.
-    /// En cas d'échec réseau, charge des données d'exemple.
-    /// </summary>
-   /// <summary>
-/// Charge les montres après connexion, en priorité depuis MongoDB
-/// (collection privée — cahier v4.0). Si la base est indisponible,
-/// fallback sur le serveur JSON, puis sur les données d'exemple.
-/// </summary>
-[RelayCommand]
-private async Task LoadAfterLogin()
-{
-    try
-    {
-        // Stratégie en cascade : MongoDB > JSON serveur > données d'exemple
-        if (Globals.IsDatabaseAvailable && Globals.CurrentUser is not null)
-        {
-            await LoadFromDatabase();
-        }
-        else
-        {
-            await LoadFromJsonServer();
-        }
-    }
-    catch (Exception ex)
-    {
-        LoadSampleData();
-        StatusMessage = $"Erreur de chargement : {ex.Message}. Données d'exemple chargées.";
-    }
-    finally
-    {
-        CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
-    }
-}
-
-/// <summary>
-/// Charge la collection privée de l'utilisateur depuis MongoDB.
-/// Admin : toutes les montres de la base. User : uniquement ses montres.
-/// </summary>
-private async Task LoadFromDatabase()
-{
-    var watches = await _mongoDbService.GetWatchesForUserAsync(Globals.CurrentUser!);
-
-    if (watches.Count > 0)
-    {
-        Globals.MyWatches = watches;
-        StatusMessage = $"{watches.Count} montre(s) chargée(s) depuis votre collection.";
-    }
-    else
-    {
-        Globals.MyWatches = [];
-        StatusMessage = "Votre collection est vide. Ajoutez votre première montre !";
-    }
-}
-
-/// <summary>
-/// Charge depuis le serveur JSON du professeur (mode hors-ligne MongoDB).
-/// </summary>
-private async Task LoadFromJsonServer()
-{
-    try
-    {
-        var watches = await _jsonServices.GetWatchesAsync();
-
-        if (watches is { Count: > 0 })
-        {
-            Globals.MyWatches = watches;
-            StatusMessage = $"{watches.Count} montre(s) chargée(s) depuis le serveur JSON.";
-        }
-        else
-        {
-            LoadSampleData();
-            StatusMessage = "Serveur vide — données d'exemple chargées.";
-        }
-    }
-    catch (System.Net.Http.HttpRequestException)
-    {
-        LoadSampleData();
-        StatusMessage = "Pas de connexion réseau — mode hors-ligne avec données d'exemple.";
-    }
-}
-
-    /// <summary>
-    /// Sauvegarde la collection sur le serveur JSON après ajout, puis retourne à la liste.
+    /// Charge les montres après connexion, en priorité depuis MongoDB
+    /// (collection privée — cahier v4.0). Si la base est indisponible,
+    /// fallback sur le serveur JSON, puis sur les données d'exemple.
     /// </summary>
     [RelayCommand]
-    private async Task SaveAndReturn()
+    private async Task LoadAfterLogin()
     {
         try
         {
-            await _jsonServices.SetWatchesAsync(Globals.MyWatches);
-            StatusMessage = "Collection sauvegardée sur le serveur.";
-        }
-        catch (System.Net.Http.HttpRequestException)
-        {
-            StatusMessage = "Sauvegarde locale uniquement — serveur indisponible.";
+            // Stratégie en cascade : MongoDB > JSON serveur > données d'exemple
+            if (Globals.IsDatabaseAvailable && Globals.CurrentUser is not null)
+            {
+                await LoadFromDatabase();
+            }
+            else
+            {
+                await LoadFromJsonServer();
+            }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Erreur de sauvegarde : {ex.Message}";
+            LoadSampleData();
+            StatusMessage = $"Erreur de chargement : {ex.Message}. Données d'exemple chargées.";
         }
         finally
         {
             CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
         }
+    }
+
+    /// <summary>
+    /// Charge la collection privée de l'utilisateur depuis MongoDB.
+    /// Admin : toutes les montres de la base. User : uniquement ses montres.
+    /// </summary>
+    private async Task LoadFromDatabase()
+    {
+        var watches = await _mongoDbService.GetWatchesForUserAsync(Globals.CurrentUser!);
+
+        if (watches.Count > 0)
+        {
+            Globals.MyWatches = watches;
+            StatusMessage = $"{watches.Count} montre(s) chargée(s) depuis votre collection.";
+        }
+        else
+        {
+            Globals.MyWatches = [];
+            StatusMessage = "Votre collection est vide. Ajoutez votre première montre !";
+        }
+    }
+
+    /// <summary>
+    /// Charge depuis le serveur JSON académique (mode hors-ligne MongoDB).
+    /// Le service JSON gère lui-même tous les modes d'échec (réseau, corruption,
+    /// timeout, coupure de flux) et expose le détail via LastError.
+    /// </summary>
+    private async Task LoadFromJsonServer()
+    {
+        var watches = await _jsonServices.GetWatchesAsync();
+
+        if (watches.Count > 0)
+        {
+            Globals.MyWatches = watches;
+            StatusMessage = $"{watches.Count} montre(s) chargée(s) depuis le serveur JSON.";
+        }
+        else if (!string.IsNullOrEmpty(_jsonServices.LastError))
+        {
+            // Erreur capturée par le service (réseau, JSON corrompu, timeout, etc.)
+            LoadSampleData();
+            StatusMessage = $"Serveur JSON indisponible ({_jsonServices.LastError}). Données d'exemple chargées.";
+        }
+        else
+        {
+            // Réponse vide sans erreur (premier accès au serveur)
+            LoadSampleData();
+            StatusMessage = "Serveur vide — données d'exemple chargées.";
+        }
+    }
+
+    /// <summary>
+    /// Sauvegarde la collection sur le serveur JSON après ajout, puis retourne à la liste.
+    /// Le service JSON expose le détail des erreurs éventuelles via LastError.
+    /// </summary>
+    [RelayCommand]
+    private async Task SaveAndReturn()
+    {
+        var success = await _jsonServices.SetWatchesAsync(Globals.MyWatches);
+
+        StatusMessage = success
+            ? "Collection sauvegardée sur le serveur."
+            : $"Sauvegarde impossible : {_jsonServices.LastError ?? "raison inconnue"}.";
+
+        CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
     }
 
     // ===== Cycle de vie =====

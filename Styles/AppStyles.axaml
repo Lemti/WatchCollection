@@ -1,0 +1,242 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================================================ -->
+    <!-- TEXTBLOCK : police par défaut Inter                            -->
+    <!-- ============================================================ -->
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInter}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.title">
+        <Setter Property="FontFamily" Value="{DynamicResource FontPlayfairBold}" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.subtitle">
+        <Setter Property="FontFamily" Value="{DynamicResource FontPlayfair}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.section">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterSemiBold}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="LetterSpacing" Value="1.5" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterMedium}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.value">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterMedium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.price">
+        <Setter Property="FontFamily" Value="{DynamicResource FontPlayfairSemiBold}" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="Foreground" Value="{DynamicResource ChampagneGoldBrush}" />
+    </Style>
+
+    <!-- ============================================================ -->
+    <!-- TEXTBOX : champs de saisie                                     -->
+    <!-- ============================================================ -->
+    <Style Selector="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInter}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ParchmentLineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="MinHeight" Value="40" />
+    </Style>
+
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource ChampagneGoldBrush}" />
+    </Style>
+
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource ChampagneGoldBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <!-- ============================================================ -->
+    <!-- COMBOBOX                                                       -->
+    <!-- ============================================================ -->
+    <Style Selector="ComboBox">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInter}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ParchmentLineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="MinHeight" Value="40" />
+    </Style>
+
+    <!-- ============================================================ -->
+    <!-- BUTTON : styles classés                                        -->
+    <!-- ============================================================ -->
+
+    <!-- Bouton principal : or champagne, accent principal -->
+    <Style Selector="Button.primary">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterSemiBold}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="{DynamicResource ChampagneGoldBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DeepBlackBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="20,12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="MinHeight" Value="44" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PaleGoldBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource DeepBlackBrush}" />
+    </Style>
+    <Style Selector="Button.primary:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource DarkGoldBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextOnDarkBrush}" />
+    </Style>
+
+    <!-- Bouton secondaire : crème + bordure, action neutre -->
+    <Style Selector="Button.secondary">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterMedium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="{DynamicResource CreamBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ParchmentLineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="20,12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="MinHeight" Value="44" />
+    </Style>
+    <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource IvoryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ChampagneGoldBrush}" />
+    </Style>
+
+    <!-- Bouton danger : pour suppressions, sobre bordeaux -->
+    <Style Selector="Button.danger">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterMedium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="{DynamicResource ErrorBordeauxLightBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBordeauxBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="20,12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="MinHeight" Value="44" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ErrorBordeauxBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextOnDarkBrush}" />
+    </Style>
+
+    <!-- Bouton succès : vert sapin (utilisé pour register, sauvegardes positives) -->
+    <Style Selector="Button.success">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterSemiBold}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="{DynamicResource SuccessForestBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextOnDarkBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="20,12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="MinHeight" Value="44" />
+    </Style>
+    <Style Selector="Button.success:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SuccessForestLightBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource SuccessForestBrush}" />
+    </Style>
+
+    <!-- Bouton avertissement (mode hors-ligne, fusion, etc.) -->
+    <Style Selector="Button.warning">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterSemiBold}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="{DynamicResource WarningAmberBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextOnDarkBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="20,12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="MinHeight" Value="44" />
+    </Style>
+    <Style Selector="Button.warning:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource WarningAmberLightBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource WarningAmberBrush}" />
+    </Style>
+
+    <!-- Bouton ghost : transparent, lien textuel -->
+    <Style Selector="Button.ghost">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterMedium}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource ChampagneGoldBrush}" />
+    </Style>
+
+    <!-- Bouton sidebar : items du menu latéral -->
+    <Style Selector="Button.sidebar">
+        <Setter Property="FontFamily" Value="{DynamicResource FontInterMedium}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextOnDarkBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.sidebar:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource GraphiteSoftBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ChampagneGoldBrush}" />
+    </Style>
+    <Style Selector="Button.sidebar:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource GraphiteSoftBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PaleGoldBrush}" />
+    </Style>
+
+    <!-- ============================================================ -->
+    <!-- BORDER : cards avec ombres                                     -->
+    <!-- ============================================================ -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="24" />
+        <Setter Property="BoxShadow" Value="0 2 16 0 #14000000" />
+    </Style>
+
+    <Style Selector="Border.card-luxe">
+        <Setter Property="Background" Value="{DynamicResource CreamBrush}" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="24" />
+        <Setter Property="BoxShadow" Value="0 4 24 0 #1A000000" />
+    </Style>
+
+    <Style Selector="Border.card-watch">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="BoxShadow" Value="0 1 6 0 #10000000" />
+    </Style>
+
+</Styles>

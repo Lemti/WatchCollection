@@ -3,7 +3,7 @@
              xmlns:vm="using:WatchCollection.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="600"
              x:Class="WatchCollection.Views.UsersView"
              x:DataType="vm:UsersViewModel">
 
@@ -11,82 +11,148 @@
         <vm:UsersViewModel/>
     </Design.DataContext>
 
-    <StackPanel Spacing="16">
-        <TextBlock Text="Utilisateurs" FontSize="28" FontWeight="Bold" Foreground="#1B1B2F"/>
-        <TextBlock Text="Gérer les comptes utilisateurs de l'application"
-                   FontSize="13" Foreground="#8E8E93"/>
+    <ScrollViewer>
+        <StackPanel Spacing="20">
+            <!-- En-tête -->
+            <StackPanel>
+                <TextBlock Text="Utilisateurs" Classes="title"/>
+                <TextBlock Text="Gérer les comptes d'accès à l'application"
+                           FontFamily="{DynamicResource FontInter}"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
 
-        <Border Background="White" CornerRadius="12" Padding="20" BoxShadow="0 1 4 0 #10000000">
-            <StackPanel Spacing="12">
-                <TextBlock Text="Nouveau compte" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
-                <Grid ColumnDefinitions="*,16,*" RowDefinitions="Auto,Auto">
-                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                        <TextBlock Text="Prénom" FontSize="12" Foreground="#8E8E93"/>
-                        <TextBox Text="{Binding NewFirstName}" Watermark="Prénom"/>
+            <!-- Carte : création de compte -->
+            <Border Classes="card">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="20"
+                                Background="{DynamicResource ChampagneGoldBrush}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="Nouveau compte"
+                                   FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                   FontSize="17"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </StackPanel>
-                    <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
-                        <TextBlock Text="Nom" FontSize="12" Foreground="#8E8E93"/>
-                        <TextBox Text="{Binding NewLastName}" Watermark="Nom"/>
+
+                    <Grid ColumnDefinitions="*,16,*" RowDefinitions="Auto,Auto">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                            <TextBlock Text="PRÉNOM" Classes="section"/>
+                            <TextBox Text="{Binding NewFirstName}" Watermark="Prénom"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
+                            <TextBlock Text="NOM" Classes="section"/>
+                            <TextBox Text="{Binding NewLastName}" Watermark="Nom"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,12,0,0">
+                            <TextBlock Text="EMAIL" Classes="section"/>
+                            <TextBox Text="{Binding NewEmail}" Watermark="email@exemple.com"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2" Spacing="4" Margin="0,12,0,0">
+                            <TextBlock Text="MOT DE PASSE" Classes="section"/>
+                            <TextBox Text="{Binding NewPassword}" Watermark="Mot de passe" PasswordChar="•"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
+                        <Button Content="Créer le compte"
+                                Command="{Binding AddUserCommand}"
+                                Classes="primary"
+                                IsEnabled="{Binding !IsBusy}"/>
+                        <Button Content="Rafraîchir"
+                                Command="{Binding RefreshUsersCommand}"
+                                Classes="secondary"
+                                IsEnabled="{Binding !IsBusy}"/>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontStyle="Italic"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
-                    <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,10,0,0">
-                        <TextBlock Text="Email" FontSize="12" Foreground="#8E8E93"/>
-                        <TextBox Text="{Binding NewEmail}" Watermark="email@exemple.com"/>
-                    </StackPanel>
-                    <StackPanel Grid.Row="1" Grid.Column="2" Spacing="4" Margin="0,10,0,0">
-                        <TextBlock Text="Mot de passe" FontSize="12" Foreground="#8E8E93"/>
-                        <TextBox Text="{Binding NewPassword}" Watermark="Mot de passe" PasswordChar="•"/>
-                    </StackPanel>
-                </Grid>
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <Button Content="Créer le compte" Command="{Binding AddUserCommand}" Classes="primary"
-                            IsEnabled="{Binding !IsBusy}"/>
-                    <Button Content="Rafraîchir" Command="{Binding RefreshUsersCommand}" Classes="ghost"
-                            IsEnabled="{Binding !IsBusy}"/>
-                    <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
-                               Foreground="#8E8E93" FontSize="12" FontStyle="Italic"/>
                 </StackPanel>
-            </StackPanel>
-        </Border>
+            </Border>
 
-        <Border Background="White" CornerRadius="12" Padding="20" BoxShadow="0 1 4 0 #10000000">
-            <StackPanel Spacing="10">
-                <TextBlock Text="Comptes existants" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
-                <ListBox ItemsSource="{Binding Users}" Background="Transparent">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#F5F5F7" CornerRadius="10" Padding="14" Margin="0,2">
-                                <Grid ColumnDefinitions="*,Auto,Auto">
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Foreground="#1B1B2F" FontWeight="SemiBold" FontSize="14"
-                                                   Text="{Binding DisplayName}"/>
-                                        <TextBlock Text="{Binding Email}" Foreground="#8E8E93" FontSize="12"/>
-                                    </StackPanel>
+            <!-- Carte : liste des comptes -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="20"
+                                Background="{DynamicResource ChampagneGoldBrush}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="Comptes existants"
+                                   FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                   FontSize="17"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
 
-                                    <Border Grid.Column="1" Background="#FFF4E5" CornerRadius="6"
-                                            Padding="10,4" VerticalAlignment="Center" Margin="10,0"
-                                            IsVisible="{Binding IsAdminBadge}">
-                                        <TextBlock Text="admin" Foreground="#FF9500"
-                                                   FontSize="11" FontWeight="SemiBold"/>
-                                    </Border>
+                    <ListBox ItemsSource="{Binding Users}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource IvoryBrush}"
+                                        CornerRadius="10"
+                                        Padding="16" Margin="0,3">
+                                    <Grid ColumnDefinitions="*,Auto,Auto">
+                                        <!-- Infos utilisateur -->
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                                       FontSize="15"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding Email}"
+                                                       FontFamily="{DynamicResource FontInter}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
 
-                                    <Border Grid.Column="1" Background="#E8F5E9" CornerRadius="6"
-                                            Padding="10,4" VerticalAlignment="Center" Margin="10,0"
-                                            IsVisible="{Binding !IsAdminBadge}">
-                                        <TextBlock Text="user" Foreground="#34C759"
-                                                   FontSize="11" FontWeight="SemiBold"/>
-                                    </Border>
+                                        <!-- Badge admin -->
+                                        <Border Grid.Column="1"
+                                                Background="{DynamicResource ChampagneGoldBrush}"
+                                                CornerRadius="4"
+                                                Padding="10,4"
+                                                VerticalAlignment="Center"
+                                                Margin="10,0"
+                                                IsVisible="{Binding IsAdminBadge}">
+                                            <TextBlock Text="ADMIN"
+                                                       Foreground="{DynamicResource DeepBlackBrush}"
+                                                       FontFamily="{DynamicResource FontInterBold}"
+                                                       FontSize="10"
+                                                       LetterSpacing="1"/>
+                                        </Border>
 
-                                    <Button Grid.Column="2" Content="Supprimer"
-                                            Command="{Binding $parent[ListBox].((vm:UsersViewModel)DataContext).DeleteUserCommand}"
-                                            CommandParameter="{Binding Email}"
-                                            Background="#FFF0F0" Foreground="#FF3B30" Padding="12,6"
-                                            CornerRadius="8" FontSize="11"/>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
-        </Border>
-    </StackPanel>
+                                        <!-- Badge user -->
+                                        <Border Grid.Column="1"
+                                                Background="{DynamicResource SuccessForestLightBrush}"
+                                                CornerRadius="4"
+                                                Padding="10,4"
+                                                VerticalAlignment="Center"
+                                                Margin="10,0"
+                                                IsVisible="{Binding !IsAdminBadge}">
+                                            <TextBlock Text="USER"
+                                                       Foreground="{DynamicResource SuccessForestBrush}"
+                                                       FontFamily="{DynamicResource FontInterBold}"
+                                                       FontSize="10"
+                                                       LetterSpacing="1"/>
+                                        </Border>
+
+                                        <!-- Bouton suppression -->
+                                        <Button Grid.Column="2"
+                                                Content="Supprimer"
+                                                Command="{Binding $parent[ListBox].((vm:UsersViewModel)DataContext).DeleteUserCommand}"
+                                                CommandParameter="{Binding Email}"
+                                                Classes="danger"
+                                                FontSize="11"
+                                                Padding="14,7"
+                                                MinHeight="32"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

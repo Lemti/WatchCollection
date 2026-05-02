@@ -1,44 +1,56 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:WatchCollection.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="550"
-        x:Class="WatchCollection.Views.CollectionView"
-        x:DataType="vm:CollectionViewModel"
-        x:Name="Collection">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:WatchCollection.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="600"
+             x:Class="WatchCollection.Views.CollectionView"
+             x:DataType="vm:CollectionViewModel"
+             x:Name="Collection">
 
     <Design.DataContext>
         <vm:CollectionViewModel/>
     </Design.DataContext>
 
     <DockPanel>
-        <!-- Header -->
-        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+        <!-- En-tête -->
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
             <StackPanel>
-                <TextBlock Text="Mes montres" FontSize="28" FontWeight="Bold" Foreground="#1B1B2F"/>
-                <TextBlock Text="{Binding MyObservableWatches.Count, StringFormat={}{0} montres dans la collection}" 
-                           FontSize="13" Foreground="#8E8E93" Margin="0,4,0,0"/>
+                <TextBlock Text="Mes montres" Classes="title"/>
+                <TextBlock Text="{Binding MyObservableWatches.Count, StringFormat={}{0} pièces dans la collection}"
+                           FontFamily="{DynamicResource FontInter}"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,4,0,0"/>
             </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
-                <Button Content="Importer" Command="{Binding ImportCsvCommand}" Classes="primary" FontSize="12"/>
-                <Button Content="Exporter" Command="{Binding ToggleExportPanelCommand}"
-                        Background="#E5E5EA" Foreground="#1B1B2F" CornerRadius="8"
-                        Padding="16,10" FontSize="12"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Content="Importer"
+                        Command="{Binding ImportCsvCommand}"
+                        Classes="primary"/>
+                <Button Content="Exporter"
+                        Command="{Binding ToggleExportPanelCommand}"
+                        Classes="secondary"/>
             </StackPanel>
         </Grid>
 
-        <!-- Status -->
-        <TextBlock DockPanel.Dock="Top" Text="{Binding StatusMessage}" Foreground="#34C759" FontSize="12" 
-                   FontStyle="Italic" Margin="0,0,0,8"
+        <!-- Message de statut -->
+        <TextBlock DockPanel.Dock="Top"
+                   Text="{Binding StatusMessage}"
+                   FontFamily="{DynamicResource FontInter}"
+                   FontStyle="Italic"
+                   FontSize="12"
+                   Foreground="{DynamicResource SuccessForestBrush}"
+                   Margin="0,0,0,12"
                    IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-        <!-- Panneau sélection colonnes -->
-        <Border DockPanel.Dock="Top" Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,12"
-                BoxShadow="0 1 4 0 #10000000"
+        <!-- Panneau de sélection des colonnes à exporter -->
+        <Border DockPanel.Dock="Top" Classes="card" Margin="0,0,0,16"
                 IsVisible="{Binding ShowExportPanel}">
-            <StackPanel Spacing="10">
-                <TextBlock Text="Sélectionnez les colonnes à exporter" FontWeight="SemiBold" FontSize="14" Foreground="#1B1B2F"/>
+            <StackPanel Spacing="12">
+                <TextBlock Text="Sélectionnez les colonnes à exporter"
+                           FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                           FontSize="16"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
                 <ItemsControl ItemsSource="{Binding ExportColumns}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -47,66 +59,108 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}"
-                                      Margin="0,0,16,6" FontSize="13"/>
+                            <CheckBox IsChecked="{Binding IsSelected}"
+                                      Content="{Binding DisplayName}"
+                                      FontFamily="{DynamicResource FontInter}"
+                                      FontSize="13"
+                                      Margin="0,0,16,8"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button Content="Exporter" Command="{Binding ConfirmExportCommand}" Classes="primary" FontSize="12"/>
-                    <Button Content="Annuler" Command="{Binding ToggleExportPanelCommand}"
-                            Background="#F2F2F7" Foreground="#636366" CornerRadius="8" Padding="16,10" FontSize="12"/>
+                    <Button Content="Exporter le CSV"
+                            Command="{Binding ConfirmExportCommand}"
+                            Classes="primary"/>
+                    <Button Content="Annuler"
+                            Command="{Binding ToggleExportPanelCommand}"
+                            Classes="secondary"/>
                 </StackPanel>
             </StackPanel>
         </Border>
 
-        <!-- Liste -->
+        <!-- Liste des montres -->
         <ScrollViewer>
             <ItemsControl ItemsSource="{Binding MyObservableWatches}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Command="{Binding ((vm:CollectionViewModel)DataContext).FromParentCommand, ElementName=Collection}"
                                 CommandParameter="{Binding Id}"
-                                Background="Transparent" Padding="0" Margin="0,0,0,8"
-                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                                BorderThickness="0" CornerRadius="12" Cursor="Hand">
-                            <Border Background="White" CornerRadius="12" Padding="16"
-                                    BoxShadow="0 1 4 0 #10000000">
-                                <Grid ColumnDefinitions="80,*,Auto">
-                                    <!-- Image -->
-                                    <Border Background="#F5F5F7" CornerRadius="10" 
-                                            Height="70" Width="70" VerticalAlignment="Center">
+                                Background="Transparent"
+                                Padding="0" Margin="0,0,0,10"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                BorderThickness="0"
+                                Cursor="Hand">
+                            <Border Classes="card-watch">
+                                <Grid ColumnDefinitions="90,*,Auto">
+
+                                    <!-- Vignette image -->
+                                    <Border Background="{DynamicResource IvoryBrush}"
+                                            CornerRadius="8"
+                                            Height="76" Width="76"
+                                            VerticalAlignment="Center">
                                         <Panel>
-                                            <Image Source="{Binding Picture}" 
-                                                   Stretch="Uniform" Height="60" Width="60"
+                                            <Image Source="{Binding Picture}"
+                                                   Stretch="Uniform" Height="64" Width="64"
                                                    IsVisible="{Binding Picture, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                                            <TextBlock Text="⌚" FontSize="28" 
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       Foreground="#C7C7CC"
+                                            <TextBlock Text="⌚" FontSize="32"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource ChampagneGoldBrush}"
                                                        IsVisible="{Binding Picture, Converter={x:Static ObjectConverters.IsNull}}"/>
                                         </Panel>
                                     </Border>
 
-                                    <!-- Infos -->
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0" Spacing="2">
-                                        <TextBlock Text="{Binding Brand}" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
-                                        <TextBlock Text="{Binding Model}" FontSize="13" Foreground="#636366"/>
+                                    <!-- Infos centrales -->
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Margin="16,0,0,0"
+                                                Spacing="3">
+                                        <TextBlock Text="{Binding Brand}"
+                                                   FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                                   FontSize="17"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Model}"
+                                                   FontFamily="{DynamicResource FontInter}"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                                         <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                                            <Border Background="#F2F2F7" CornerRadius="4" Padding="6,2">
-                                                <TextBlock Text="{Binding Movement}" FontSize="11" Foreground="#636366"/>
+                                            <Border Background="{DynamicResource IvoryBrush}"
+                                                    CornerRadius="4" Padding="6,2">
+                                                <TextBlock Text="{Binding Movement}"
+                                                           FontFamily="{DynamicResource FontInterMedium}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </Border>
-                                            <TextBlock Text="{Binding Diameter, StringFormat={}{0}mm}" FontSize="11" 
-                                                       Foreground="#8E8E93" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Year}" FontSize="11" 
-                                                       Foreground="#8E8E93" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Diameter, StringFormat={}{0}mm}"
+                                                       FontFamily="{DynamicResource FontInter}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Year}"
+                                                       FontFamily="{DynamicResource FontInter}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding Price, StringFormat={}{0:N0} €}"
-                                                   FontSize="15" FontWeight="SemiBold" Foreground="#34C759" Margin="0,3,0,0"/>
                                     </StackPanel>
 
-                                    <!-- Chevron -->
-                                    <TextBlock Grid.Column="2" Text="›" FontSize="24" Foreground="#C7C7CC"
-                                               VerticalAlignment="Center" Margin="10,0,5,0"/>
+                                    <!-- Prix + chevron -->
+                                    <StackPanel Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Right"
+                                                Margin="12,0,4,0">
+                                        <TextBlock Text="{Binding Price, StringFormat={}{0:N0} €}"
+                                                   FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                                   FontSize="20"
+                                                   Foreground="{DynamicResource ChampagneGoldBrush}"
+                                                   HorizontalAlignment="Right"/>
+                                        <TextBlock Text="›"
+                                                   FontSize="22"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
                         </Button>

@@ -3,92 +3,187 @@
              xmlns:vm="using:WatchCollection.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="WatchCollection.Views.LoginView"
              x:DataType="vm:LoginViewModel"
-             Background="#F5F5F7">
+             Background="{DynamicResource DeepBlackBrush}">
+
+    <UserControl.KeyBindings>
+        <!-- Enter : déclenche Login ou Register selon le mode actif -->
+        <KeyBinding Gesture="Enter" Command="{Binding SubmitCommand}"/>
+    </UserControl.KeyBindings>
 
     <Design.DataContext>
         <vm:LoginViewModel/>
     </Design.DataContext>
 
     <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-            Background="White" CornerRadius="16" 
-            BoxShadow="0 4 30 0 #20000000" MinWidth="700">
-        <Grid ColumnDefinitions="280,*">
-            <!-- Image côté gauche -->
-            <Border Grid.Column="0" Background="#1B1B2F" CornerRadius="16,0,0,16" Padding="30">
-                <StackPanel VerticalAlignment="Center" Spacing="20">
-                    <Image Source="{Binding WatchHeroImage}" 
-                           Height="180" Stretch="Uniform"
-                           IsVisible="{Binding WatchHeroImage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                    <TextBlock Text="⌚" FontSize="80" HorizontalAlignment="Center" Foreground="#555"
-                               IsVisible="{Binding WatchHeroImage, Converter={x:Static ObjectConverters.IsNull}}"/>
-                    <TextBlock Text="WatchCollection" FontSize="22" FontWeight="Bold" 
-                               Foreground="White" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Gérez votre collection de montres avec élégance" 
-                               FontSize="12" Foreground="#8E8E93" HorizontalAlignment="Center"
-                               TextAlignment="Center" TextWrapping="Wrap"/>
-                </StackPanel>
+            Background="{DynamicResource CreamBrush}"
+            CornerRadius="14"
+            BoxShadow="0 8 40 0 #50000000"
+            MinWidth="780" MaxWidth="820">
+        <Grid ColumnDefinitions="320,*">
+
+            <!-- Panneau gauche : ambiance maison horlogère -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource DeepBlackBrush}"
+                    CornerRadius="14,0,0,14"
+                    Padding="36,40">
+                <DockPanel>
+                    <!-- Footer du panneau gauche -->
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="8">
+                        <Border Height="1" Background="{DynamicResource GraphiteSoftBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Maison Horlogère"
+                                   FontFamily="{DynamicResource FontPlayfair}"
+                                   FontSize="13"
+                                   FontStyle="Italic"
+                                   Foreground="{DynamicResource ChampagneGoldBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="EST. 2026"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontSize="9"
+                                   LetterSpacing="3"
+                                   Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Contenu central -->
+                    <StackPanel VerticalAlignment="Center" Spacing="22">
+                        <Image Source="{Binding WatchHeroImage}"
+                               Height="170" Stretch="Uniform"
+                               IsVisible="{Binding WatchHeroImage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                        <TextBlock Text="⌚" FontSize="84"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource ChampagneGoldBrush}"
+                                   IsVisible="{Binding WatchHeroImage, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="WatchCollection"
+                                       FontFamily="{DynamicResource FontPlayfairBold}"
+                                       FontSize="28"
+                                       Foreground="{DynamicResource TextOnDarkBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <Border Width="40" Height="1"
+                                    Background="{DynamicResource ChampagneGoldBrush}"
+                                    HorizontalAlignment="Center"/>
+                            <TextBlock Text="Préservez l'élégance du temps"
+                                       FontFamily="{DynamicResource FontInter}"
+                                       FontSize="11"
+                                       FontStyle="Italic"
+                                       Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
             </Border>
 
-            <!-- Formulaire côté droit -->
-            <Border Grid.Column="1" Padding="40,35">
+            <!-- Panneau droit : formulaire -->
+            <Border Grid.Column="1" Padding="48,40"
+                    Background="{DynamicResource CreamBrush}"
+                    CornerRadius="0,14,14,0">
                 <StackPanel Spacing="14" VerticalAlignment="Center">
-                    <TextBlock Text="Bienvenue" FontSize="26" FontWeight="Bold" Foreground="#1B1B2F"/>
-                    <TextBlock Text="Connectez-vous à votre collection"
-                               FontSize="13" Foreground="#8E8E93" Margin="0,0,0,12"/>
+
+                    <!-- Titre -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Bienvenue"
+                                   FontFamily="{DynamicResource FontPlayfairBold}"
+                                   FontSize="32"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Connectez-vous pour accéder à votre collection"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   Margin="0,0,0,12"/>
+                    </StackPanel>
 
                     <!-- Champs inscription -->
                     <StackPanel Spacing="4" IsVisible="{Binding IsRegistering}">
-                        <TextBlock Text="Prénom" FontSize="12" Foreground="#8E8E93"/>
+                        <TextBlock Text="PRÉNOM" Classes="section"/>
                         <TextBox Text="{Binding FirstName}" Watermark="Votre prénom"/>
                     </StackPanel>
                     <StackPanel Spacing="4" IsVisible="{Binding IsRegistering}">
-                        <TextBlock Text="Nom" FontSize="12" Foreground="#8E8E93"/>
+                        <TextBlock Text="NOM" Classes="section"/>
                         <TextBox Text="{Binding LastName}" Watermark="Votre nom"/>
                     </StackPanel>
 
-                    <!-- Champs login -->
+                    <!-- Champs login communs -->
                     <StackPanel Spacing="4">
-                        <TextBlock Text="Email" FontSize="12" Foreground="#8E8E93"/>
+                        <TextBlock Text="EMAIL" Classes="section"/>
                         <TextBox Text="{Binding Email}" Watermark="email@exemple.com"/>
                     </StackPanel>
                     <StackPanel Spacing="4">
-                        <TextBlock Text="Mot de passe" FontSize="12" Foreground="#8E8E93"/>
+                        <TextBlock Text="MOT DE PASSE" Classes="section"/>
                         <TextBox Text="{Binding Password}" Watermark="Votre mot de passe" PasswordChar="•"/>
                     </StackPanel>
 
-                    <!-- Erreur -->
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#FF3B30"
-                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                               TextWrapping="Wrap" FontSize="12"/>
+                    <!-- Message d'erreur -->
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource ErrorBordeauxBrush}"
+                               FontFamily="{DynamicResource FontInterMedium}"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-                    <!-- Boutons -->
-                    <Button Content="Se connecter" Command="{Binding LoginCommand}"
-                            IsVisible="{Binding !IsRegistering}" Classes="primary"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            FontSize="14" Margin="0,8,0,0"/>
+                    <!-- Bouton principal selon le mode -->
+                    <Button Command="{Binding LoginCommand}"
+                            IsVisible="{Binding !IsRegistering}"
+                            Classes="primary"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Margin="0,8,0,0"
+                            IsDefault="True">
+                        <TextBlock Text="SE CONNECTER" FontSize="12" LetterSpacing="2"
+                                   FontFamily="{DynamicResource FontInterSemiBold}"/>
+                    </Button>
 
-                    <Button Content="Créer mon compte" Command="{Binding RegisterCommand}"
-                            IsVisible="{Binding IsRegistering}" Classes="success"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            FontSize="14" Margin="0,8,0,0"/>
+                    <Button Command="{Binding RegisterCommand}"
+                            IsVisible="{Binding IsRegistering}"
+                            Classes="success"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Margin="0,8,0,0"
+                            IsDefault="True">
+                        <TextBlock Text="CRÉER MON COMPTE" FontSize="12" LetterSpacing="2"
+                                   FontFamily="{DynamicResource FontInterSemiBold}"/>
+                    </Button>
 
-                    <Button Command="{Binding ToggleRegisterCommand}" Classes="ghost"
-                            HorizontalAlignment="Center" FontSize="13">
+                    <!-- Toggle login/register -->
+                    <Button Command="{Binding ToggleRegisterCommand}"
+                            Classes="ghost"
+                            HorizontalAlignment="Center">
                         <StackPanel>
-                            <TextBlock Text="Créer un compte" IsVisible="{Binding !IsRegistering}"/>
-                            <TextBlock Text="J'ai déjà un compte" IsVisible="{Binding IsRegistering}"/>
+                            <TextBlock Text="Pas encore de compte ? Créer un compte"
+                                       IsVisible="{Binding !IsRegistering}"/>
+                            <TextBlock Text="J'ai déjà un compte"
+                                       IsVisible="{Binding IsRegistering}"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Bypass -->
-                    <Button Content="Continuer sans compte" Command="{Binding SkipLoginCommand}"
-                            IsVisible="{Binding !IsMongoAvailable}"
-                            Background="#FF9500" Foreground="White" CornerRadius="8"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Padding="12,10" FontSize="13"/>
+                    <!-- Séparateur -->
+                    <Border Height="1"
+                            Background="{DynamicResource ParchmentLineBrush}"
+                            Margin="0,12,0,0"/>
+
+                    <!-- Lien discret mode hors-ligne -->
+                    <StackPanel Orientation="Horizontal" Spacing="4"
+                                HorizontalAlignment="Center">
+                        <TextBlock Text="Pas de connexion ?"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center"/>
+                        <Button Content="Tester en mode hors-ligne"
+                                Command="{Binding SkipLoginCommand}"
+                                Background="Transparent"
+                                Foreground="{DynamicResource ChampagneGoldBrush}"
+                                FontFamily="{DynamicResource FontInterSemiBold}"
+                                FontSize="11"
+                                Padding="4,2" BorderThickness="0"
+                                Cursor="Hand"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>

@@ -3,99 +3,140 @@
              xmlns:vm="using:WatchCollection.ViewModels"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="700"
+             mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="800"
              x:Class="WatchCollection.Views.AddWatchView"
              x:DataType="vm:AddWatchViewModel">
+
+    <UserControl.KeyBindings>
+        <!-- Enter : ajoute la montre à la collection -->
+        <KeyBinding Gesture="Enter" Command="{Binding AddWatchCommand}"/>
+    </UserControl.KeyBindings>
 
     <Design.DataContext>
         <vm:AddWatchViewModel/>
     </Design.DataContext>
 
     <ScrollViewer>
-        <StackPanel Spacing="16">
-            <TextBlock Text="Ajouter une montre" FontSize="28" FontWeight="Bold" Foreground="#1B1B2F"/>
-            <TextBlock Text="Remplissez les informations pour ajouter une montre à votre collection"
-                       FontSize="13" Foreground="#8E8E93" Margin="0,0,0,4"/>
+        <StackPanel Spacing="20">
+            <!-- En-tête -->
+            <StackPanel>
+                <TextBlock Text="Ajouter une montre" Classes="title"/>
+                <TextBlock Text="Renseignez les informations pour enrichir votre collection"
+                           FontFamily="{DynamicResource FontInter}"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
 
-            <!-- Scanner -->
-            <Border Background="White" CornerRadius="12" Padding="20" BoxShadow="0 1 4 0 #10000000">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Scanner USB" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
+            <!-- Carte Scanner USB -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="20"
+                                Background="{DynamicResource ChampagneGoldBrush}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="Scanner USB"
+                                   FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                   FontSize="17"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
                     <TextBlock Text="Connectez un scanner de code-barre pour identifier automatiquement la montre"
-                               FontSize="12" Foreground="#8E8E93"/>
+                               FontFamily="{DynamicResource FontInter}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Content="Connecter" Command="{Binding ConnectScannerCommand}"
-                                IsVisible="{Binding !IsScannerConnected}" Classes="success" FontSize="12"/>
-                        <Button Content="Déconnecter" Command="{Binding DisconnectScannerCommand}"
-                                IsVisible="{Binding IsScannerConnected}" Classes="danger" FontSize="12"/>
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="#8E8E93" FontSize="12"
-                                   VerticalAlignment="Center" FontStyle="Italic"/>
+                        <Button Content="Connecter"
+                                Command="{Binding ConnectScannerCommand}"
+                                IsVisible="{Binding !IsScannerConnected}"
+                                Classes="success"/>
+                        <Button Content="Déconnecter"
+                                Command="{Binding DisconnectScannerCommand}"
+                                IsVisible="{Binding IsScannerConnected}"
+                                Classes="danger"/>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontSize="12"
+                                   FontStyle="Italic"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
-            <!-- Formulaire -->
-            <Border Background="White" CornerRadius="12" Padding="20" BoxShadow="0 1 4 0 #10000000">
-                <StackPanel Spacing="14">
-                    <TextBlock Text="Informations" FontWeight="SemiBold" FontSize="15" Foreground="#1B1B2F"/>
+            <!-- Carte Formulaire -->
+            <Border Classes="card">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" Height="20"
+                                Background="{DynamicResource ChampagneGoldBrush}"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="Informations"
+                                   FontFamily="{DynamicResource FontPlayfairSemiBold}"
+                                   FontSize="17"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </StackPanel>
 
                     <StackPanel Spacing="4">
-                        <TextBlock Text="Code-barre" FontSize="12" Foreground="#8E8E93"/>
+                        <TextBlock Text="CODE-BARRE" Classes="section"/>
                         <TextBox Text="{Binding Barcode}" Watermark="Scannez ou saisissez manuellement"/>
                     </StackPanel>
 
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Marque *" FontSize="12" Foreground="#8E8E93"/>
-                            <TextBox Text="{Binding Brand}" Watermark="Rolex, Omega, Seiko..."/>
+                            <TextBlock Text="MARQUE *" Classes="section"/>
+                            <TextBox Text="{Binding Brand}" Watermark="Rolex, Omega, Patek..."/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Spacing="4">
-                            <TextBlock Text="Modèle *" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="MODÈLE *" Classes="section"/>
                             <TextBox Text="{Binding Model}" Watermark="Submariner, Speedmaster..."/>
                         </StackPanel>
                     </Grid>
 
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Référence" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="RÉFÉRENCE" Classes="section"/>
                             <TextBox Text="{Binding Reference}" Watermark="126610LN"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Spacing="4">
-                            <TextBlock Text="Mouvement" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="MOUVEMENT" Classes="section"/>
                             <ComboBox ItemsSource="{Binding MovementOptions}"
                                       SelectedItem="{Binding Movement}"
-                                      HorizontalAlignment="Stretch" CornerRadius="8"/>
+                                      HorizontalAlignment="Stretch"/>
                         </StackPanel>
                     </Grid>
 
                     <Grid ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Diamètre (mm)" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="DIAMÈTRE (mm)" Classes="section"/>
                             <TextBox Text="{Binding Diameter}" Watermark="41"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Spacing="4">
-                            <TextBlock Text="Matériau boîtier" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="MATÉRIAU BOÎTIER" Classes="section"/>
                             <TextBox Text="{Binding CaseMaterial}" Watermark="Acier, Titane, Or..."/>
                         </StackPanel>
                     </Grid>
 
                     <Grid ColumnDefinitions="*,16,*,16,*">
                         <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Prix (€)" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="PRIX (€)" Classes="section"/>
                             <TextBox Text="{Binding Price}" Watermark="9150"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Spacing="4">
-                            <TextBlock Text="Année" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="ANNÉE" Classes="section"/>
                             <TextBox Text="{Binding Year}" Watermark="2024"/>
                         </StackPanel>
                         <StackPanel Grid.Column="4" Spacing="4">
-                            <TextBlock Text="Stock" FontSize="12" Foreground="#8E8E93"/>
+                            <TextBlock Text="STOCK" Classes="section"/>
                             <TextBox Text="{Binding Stock}" Watermark="1"/>
                         </StackPanel>
                     </Grid>
 
-                    <Button Content="Ajouter à la collection" Command="{Binding AddWatchCommand}"
-                            Classes="primary" HorizontalAlignment="Left" FontSize="14" Margin="0,6,0,0"/>
+                    <Button Content="Ajouter à la collection"
+                            Command="{Binding AddWatchCommand}"
+                            Classes="primary"
+                            HorizontalAlignment="Left"
+                            Margin="0,8,0,0"
+                            IsDefault="True"/>
                 </StackPanel>
             </Border>
         </StackPanel>

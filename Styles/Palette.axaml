@@ -1,0 +1,71 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Palette "Maison Horlogère" - Direction esthétique luxe sobre -->
+
+    <!-- Tons sombres -->
+    <Color x:Key="DeepBlack">#0F0E0E</Color>
+    <Color x:Key="Charcoal">#1C1B1A</Color>
+    <Color x:Key="GraphiteSoft">#2A2826</Color>
+
+    <!-- Or champagne (accent principal) -->
+    <Color x:Key="ChampagneGold">#C9A961</Color>
+    <Color x:Key="PaleGold">#E8D5A0</Color>
+    <Color x:Key="DarkGold">#8B7440</Color>
+
+    <!-- Crèmes et beiges -->
+    <Color x:Key="Cream">#FAF7F2</Color>
+    <Color x:Key="Ivory">#F0EBE3</Color>
+    <Color x:Key="ParchmentLine">#E5DFD3</Color>
+
+    <!-- Texte -->
+    <Color x:Key="TextPrimary">#1C1B1A</Color>
+    <Color x:Key="TextSecondary">#6B6862</Color>
+    <Color x:Key="TextMuted">#9A968D</Color>
+    <Color x:Key="TextOnDark">#FAF7F2</Color>
+    <Color x:Key="TextOnDarkMuted">#A8A39A</Color>
+
+    <!-- États sémantiques (sobres, pas criards) -->
+    <Color x:Key="ErrorBordeaux">#A0392E</Color>
+    <Color x:Key="ErrorBordeauxLight">#F2DCD8</Color>
+    <Color x:Key="SuccessForest">#3D5A40</Color>
+    <Color x:Key="SuccessForestLight">#DCE6DD</Color>
+    <Color x:Key="WarningAmber">#A87B27</Color>
+    <Color x:Key="WarningAmberLight">#F5E8D0</Color>
+
+    <!-- Brushes (versions exploitables dans les bindings) -->
+    <SolidColorBrush x:Key="DeepBlackBrush" Color="{StaticResource DeepBlack}" />
+    <SolidColorBrush x:Key="CharcoalBrush" Color="{StaticResource Charcoal}" />
+    <SolidColorBrush x:Key="GraphiteSoftBrush" Color="{StaticResource GraphiteSoft}" />
+
+    <SolidColorBrush x:Key="ChampagneGoldBrush" Color="{StaticResource ChampagneGold}" />
+    <SolidColorBrush x:Key="PaleGoldBrush" Color="{StaticResource PaleGold}" />
+    <SolidColorBrush x:Key="DarkGoldBrush" Color="{StaticResource DarkGold}" />
+
+    <SolidColorBrush x:Key="CreamBrush" Color="{StaticResource Cream}" />
+    <SolidColorBrush x:Key="IvoryBrush" Color="{StaticResource Ivory}" />
+    <SolidColorBrush x:Key="ParchmentLineBrush" Color="{StaticResource ParchmentLine}" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}" />
+    <SolidColorBrush x:Key="TextOnDarkBrush" Color="{StaticResource TextOnDark}" />
+    <SolidColorBrush x:Key="TextOnDarkMutedBrush" Color="{StaticResource TextOnDarkMuted}" />
+
+    <SolidColorBrush x:Key="ErrorBordeauxBrush" Color="{StaticResource ErrorBordeaux}" />
+    <SolidColorBrush x:Key="ErrorBordeauxLightBrush" Color="{StaticResource ErrorBordeauxLight}" />
+    <SolidColorBrush x:Key="SuccessForestBrush" Color="{StaticResource SuccessForest}" />
+    <SolidColorBrush x:Key="SuccessForestLightBrush" Color="{StaticResource SuccessForestLight}" />
+    <SolidColorBrush x:Key="WarningAmberBrush" Color="{StaticResource WarningAmber}" />
+    <SolidColorBrush x:Key="WarningAmberLightBrush" Color="{StaticResource WarningAmberLight}" />
+
+    <!-- Polices (chemins relatifs à la racine du projet) -->
+    <FontFamily x:Key="FontInter">avares://WatchCollection/Assets/Fonts/Inter_24pt-Regular.ttf#Inter</FontFamily>
+    <FontFamily x:Key="FontInterMedium">avares://WatchCollection/Assets/Fonts/Inter_24pt-Medium.ttf#Inter</FontFamily>
+    <FontFamily x:Key="FontInterSemiBold">avares://WatchCollection/Assets/Fonts/Inter_24pt-SemiBold.ttf#Inter</FontFamily>
+    <FontFamily x:Key="FontInterBold">avares://WatchCollection/Assets/Fonts/Inter_24pt-Bold.ttf#Inter</FontFamily>
+    <FontFamily x:Key="FontPlayfair">avares://WatchCollection/Assets/Fonts/PlayfairDisplay-Regular.ttf#Playfair Display</FontFamily>
+    <FontFamily x:Key="FontPlayfairSemiBold">avares://WatchCollection/Assets/Fonts/PlayfairDisplay-SemiBold.ttf#Playfair Display</FontFamily>
+    <FontFamily x:Key="FontPlayfairBold">avares://WatchCollection/Assets/Fonts/PlayfairDisplay-Bold.ttf#Playfair Display</FontFamily>
+
+</ResourceDictionary>

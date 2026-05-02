@@ -3,63 +3,118 @@
         xmlns:vm="using:WatchCollection.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
         x:Class="WatchCollection.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         x:Name="Main"
         Icon="/Assets/avalonia-logo.ico"
         Title="WatchCollection — Version 1.1"
-        Background="#F5F5F7">
+        Background="{DynamicResource IvoryBrush}">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
     <Panel>
-        <Grid ColumnDefinitions="220,*" IsVisible="{Binding IsLoggedIn}">
-            <!-- SIDEBAR -->
-            <Border Grid.Column="0" Background="White" BorderBrush="#E5E5EA" BorderThickness="0,0,1,0"
-                    Padding="12,20">
+        <!-- Layout principal après login -->
+        <Grid ColumnDefinitions="240,*" IsVisible="{Binding IsLoggedIn}">
+
+            <!-- SIDEBAR — fond sombre, accents or champagne -->
+            <Border Grid.Column="0" Background="{DynamicResource DeepBlackBrush}"
+                    Padding="16,24">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Margin="8,0,0,25">
-                        <TextBlock Text="WatchCollection" FontSize="18" FontWeight="Bold" Foreground="#1B1B2F"/>
-                        <TextBlock Text="{Binding CurrentUserName}" FontSize="12" Foreground="#8E8E93" Margin="0,2,0,0"/>
+                    <!-- Header sidebar : logo + utilisateur connecté -->
+                    <StackPanel DockPanel.Dock="Top" Margin="6,0,0,32">
+                        <TextBlock Text="WatchCollection"
+                                   FontFamily="{DynamicResource FontPlayfairBold}"
+                                   FontSize="20"
+                                   Foreground="{DynamicResource TextOnDarkBrush}"/>
+                        <TextBlock Text="Maison Horlogère"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontSize="9"
+                                   LetterSpacing="2"
+                                   Foreground="{DynamicResource ChampagneGoldBrush}"
+                                   Margin="0,2,0,12"/>
+                        <Border Height="1" Background="{DynamicResource GraphiteSoftBrush}" Margin="0,0,0,12"/>
+                        <TextBlock Text="{Binding CurrentUserName}"
+                                   FontFamily="{DynamicResource FontInterMedium}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextOnDarkBrush}"/>
                     </StackPanel>
 
-                    <!-- Bas de sidebar : Déconnexion + Version -->
-                    <StackPanel DockPanel.Dock="Bottom" Spacing="4" Margin="8,10,0,0">
-                        <Button Content="Déconnexion" Command="{Binding LogoutCommand}"
-                                Classes="ghost" HorizontalAlignment="Left" Foreground="#FF3B30" FontSize="12"/>
-                        <TextBlock Text="{Binding AppVersion}" FontSize="10" Foreground="#C7C7CC"
-                                   HorizontalAlignment="Left" Margin="5,4,0,0"/>
+                    <!-- Bas de sidebar : Déconnexion + Indicateur connexion + Version -->
+                    <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="6,10,0,0">
+                        <Button Content="Déconnexion"
+                                Command="{Binding LogoutCommand}"
+                                Background="Transparent"
+                                Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                BorderThickness="0"
+                                FontFamily="{DynamicResource FontInterMedium}"
+                                FontSize="12"
+                                Padding="0,4"
+                                HorizontalAlignment="Left"
+                                Cursor="Hand"/>
+
+                        <!-- Indicateur Mode Hors-ligne -->
+                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                    IsVisible="{Binding !IsDatabaseAvailable}"
+                                    Margin="0,4,0,0">
+                            <Ellipse Width="6" Height="6"
+                                     Fill="{DynamicResource ChampagneGoldBrush}"
+                                     VerticalAlignment="Center"/>
+                            <TextBlock Text="Hors-ligne"
+                                       FontFamily="{DynamicResource FontInter}"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource ChampagneGoldBrush}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding AppVersion}"
+                                   FontFamily="{DynamicResource FontInter}"
+                                   FontSize="9"
+                                   Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                   Margin="0,4,0,0"/>
                     </StackPanel>
 
+                    <!-- Navigation principale -->
                     <StackPanel Spacing="2">
-                        <TextBlock Text="COLLECTION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93"
-                                   Margin="8,0,0,8"/>
-                        <Button Content="Mes montres" Command="{Binding BackToMainCommand}" Classes="sidebar"/>
-                        <Button Content="Ajouter une montre" Command="{Binding GoToAddWatchCommand}" Classes="sidebar"/>
+                        <TextBlock Text="COLLECTION" Classes="section"
+                                   Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                   Margin="6,0,0,10"/>
+                        <Button Content="Mes montres"
+                                Command="{Binding BackToMainCommand}"
+                                Classes="sidebar"/>
+                        <Button Content="Ajouter une montre"
+                                Command="{Binding GoToAddWatchCommand}"
+                                Classes="sidebar"/>
 
-                        <TextBlock Text="ANALYSE" FontSize="10" FontWeight="Bold" Foreground="#8E8E93"
-                                   Margin="8,18,0,8"/>
-                        <Button Content="Graphiques" Command="{Binding GoToChartsCommand}" Classes="sidebar"/>
+                        <TextBlock Text="ANALYSE" Classes="section"
+                                   Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                   Margin="6,22,0,10"/>
+                        <Button Content="Graphiques"
+                                Command="{Binding GoToChartsCommand}"
+                                Classes="sidebar"/>
 
-                        <StackPanel IsVisible="{Binding IsAdmin}" Margin="0,15,0,0">
-                            <TextBlock Text="ADMINISTRATION" FontSize="10" FontWeight="Bold" Foreground="#8E8E93"
-                                       Margin="8,0,0,8"/>
-                            <Button Content="Utilisateurs" Command="{Binding GoToUsersCommand}" Classes="sidebar"/>
+                        <StackPanel IsVisible="{Binding IsAdmin}" Margin="0,18,0,0">
+                            <TextBlock Text="ADMINISTRATION" Classes="section"
+                                       Foreground="{DynamicResource TextOnDarkMutedBrush}"
+                                       Margin="6,0,0,10"/>
+                            <Button Content="Utilisateurs"
+                                    Command="{Binding GoToUsersCommand}"
+                                    Classes="sidebar"/>
                         </StackPanel>
                     </StackPanel>
                 </DockPanel>
             </Border>
 
-            <!-- CONTENT -->
-            <Border Grid.Column="1" Padding="30,25" Background="#F5F5F7">
+            <!-- CONTENT AREA -->
+            <Border Grid.Column="1" Padding="32,28"
+                    Background="{DynamicResource IvoryBrush}">
                 <TransitioningContentControl Content="{Binding CurrentPage}" />
             </Border>
         </Grid>
 
-        <!-- LOGIN -->
+        <!-- Layout login (avant authentification) -->
         <Panel IsVisible="{Binding !IsLoggedIn}">
             <TransitioningContentControl Content="{Binding CurrentPage}" />
         </Panel>
