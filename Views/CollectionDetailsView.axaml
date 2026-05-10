@@ -33,7 +33,6 @@
                         IsVisible="{Binding !IsEditing}">
                     <StackPanel Spacing="20">
                         <Grid ColumnDefinitions="170,*">
-                            <!-- Vignette -->
                             <Border Background="{DynamicResource IvoryBrush}"
                                     CornerRadius="12"
                                     Height="150" Width="150"
@@ -49,7 +48,6 @@
                                 </Panel>
                             </Border>
 
-                            <!-- Détails -->
                             <StackPanel Grid.Column="1" Spacing="6" Margin="28,0,0,0">
                                 <TextBlock Text="{Binding MyWatch.Brand}"
                                            FontFamily="{DynamicResource FontPlayfairBold}"
@@ -61,7 +59,6 @@
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,0,12"/>
 
-                                <!-- Caractéristiques techniques -->
                                 <Border Background="White"
                                         CornerRadius="10" Padding="20">
                                     <Grid ColumnDefinitions="120,*"
@@ -79,7 +76,6 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Bandeau Année / Stock / Prix -->
                                 <StackPanel Orientation="Horizontal" Spacing="36" Margin="0,16,0,0">
                                     <StackPanel>
                                         <TextBlock Text="ANNÉE" Classes="section"/>
@@ -109,14 +105,13 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Actions -->
                         <Border Height="1" Background="{DynamicResource ParchmentLineBrush}"/>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Button Content="Modifier"
                                     Command="{Binding StartEditCommand}"
                                     Classes="primary"/>
                             <Button Content="Supprimer"
-                                    Command="{Binding DeleteCommand}"
+                                    Command="{Binding RequestDeleteCommand}"
                                     Classes="danger"/>
                         </StackPanel>
 
@@ -253,6 +248,48 @@
                         <Button Content="Confirmer la fusion"
                                 Command="{Binding ConfirmMergeCommand}"
                                 Classes="warning"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- OVERLAY DE CONFIRMATION DE SUPPRESSION -->
+        <Border Background="#B0000000"
+                IsVisible="{Binding IsDeleteConfirmationVisible}">
+            <Border Background="{DynamicResource CreamBrush}"
+                    CornerRadius="14" Padding="32"
+                    MaxWidth="500"
+                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                    BoxShadow="0 8 32 0 #60000000">
+                <StackPanel Spacing="18">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="⚠"
+                                   FontSize="26"
+                                   Foreground="{DynamicResource ErrorBordeauxBrush}"/>
+                        <TextBlock Text="Confirmer la suppression"
+                                   FontFamily="{DynamicResource FontPlayfairBold}"
+                                   FontSize="22"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{DynamicResource ParchmentLineBrush}"/>
+
+                    <TextBlock Text="{Binding DeleteConfirmationText}"
+                               FontFamily="{DynamicResource FontInter}"
+                               FontSize="13"
+                               LineHeight="22"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               TextWrapping="Wrap"/>
+
+                    <StackPanel Orientation="Horizontal" Spacing="10"
+                                HorizontalAlignment="Right" Margin="0,8,0,0">
+                        <Button Content="Annuler"
+                                Command="{Binding CancelDeleteCommand}"
+                                Classes="secondary"/>
+                        <Button Content="Supprimer définitivement"
+                                Command="{Binding ConfirmDeleteCommand}"
+                                Classes="danger"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

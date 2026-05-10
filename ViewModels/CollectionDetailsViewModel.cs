@@ -23,6 +23,10 @@ public partial class CollectionDetailsViewModel : ViewModelBase
     [ObservableProperty] private bool _isMergeConfirmationVisible;
     [ObservableProperty] private string _mergeConfirmationText = string.Empty;
 
+    // Popup de confirmation de suppression : empêche les suppressions accidentelles
+    [ObservableProperty] private bool _isDeleteConfirmationVisible;
+    [ObservableProperty] private string _deleteConfirmationText = string.Empty;
+
     [ObservableProperty] private string _editBrand = string.Empty;
     [ObservableProperty] private string _editModel = string.Empty;
     [ObservableProperty] private string _editReference = string.Empty;
@@ -231,9 +235,39 @@ public partial class CollectionDetailsViewModel : ViewModelBase
         target.Stock = int.TryParse(EditStock, out var s) ? s : target.Stock;
     }
 
+    /// <summary>
+    /// Étape 1 du flux de suppression : affiche un popup de confirmation
+    /// pour éviter les suppressions accidentelles. La vraie suppression
+    /// n'a lieu qu'après validation explicite via ConfirmDeleteCommand.
+    /// </summary>
     [RelayCommand]
-    private async Task Delete()
+    private void RequestDelete()
     {
+        DeleteConfirmationText =
+            $"Êtes-vous sûr de vouloir supprimer cette {MyWatch.Brand} {MyWatch.Model} ? " +
+            $"Cette action est irréversible.";
+        IsDeleteConfirmationVisible = true;
+    }
+
+    /// <summary>
+    /// Annule la demande de suppression et ferme le popup.
+    /// </summary>
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        IsDeleteConfirmationVisible = false;
+    }
+
+    /// <summary>
+    /// Étape 2 du flux de suppression : exécute la suppression réelle
+    /// après confirmation de l'utilisateur. Persiste en MongoDB si dispo,
+    /// sinon supprime uniquement en mémoire (mode hors-ligne).
+    /// </summary>
+    [RelayCommand]
+    private async Task ConfirmDelete()
+    {
+        IsDeleteConfirmationVisible = false;
+
         try
         {
             IsBusy = true;
@@ -304,4 +338,4 @@ public partial class CollectionDetailsViewModel : ViewModelBase
         error = string.Empty;
         return true;
     }
-}   
+}

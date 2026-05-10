@@ -68,12 +68,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void BackToMain() => GoToCollection();
 
+    /// <summary>
+    /// Déconnexion : on nettoie la session pour qu'un nouveau login (notamment hors-ligne)
+    /// reparte d'un état propre, sans conserver les montres de la session précédente en mémoire.
+    /// </summary>
     [RelayCommand]
     private void Logout()
     {
         Globals.CurrentUser = null;
+        Globals.MyWatches.Clear();
         IsLoggedIn = false;
         IsAdmin = false;
+        IsDatabaseAvailable = false;
         CurrentUserName = string.Empty;
         StatusMessage = string.Empty;
         CurrentPage = new LoginViewModel(OnLoginSuccessRequested);
@@ -186,21 +192,20 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Sauvegarde la collection sur le serveur JSON après ajout, puis retourne à la liste.
-    /// Le service JSON expose le détail des erreurs éventuelles via LastError.
+    /// Retour à la liste après ajout d'une montre. La persistance MongoDB est déjà
+    /// faite par AddWatchAsync dans AddWatchViewModel (collection privée — cahier v4).
+    /// Le serveur JSON académique est utilisé en lecture seule comme fallback de résilience,
+    /// jamais en écriture, pour éviter la pollution croisée entre étudiants partageant le serveur.
     /// </summary>
     [RelayCommand]
-    private async Task SaveAndReturn()
+    private void SaveAndReturn()
     {
-        var success = await _jsonServices.SetWatchesAsync(Globals.MyWatches);
-
-        StatusMessage = success
-            ? "Collection sauvegardée sur le serveur."
-            : $"Sauvegarde impossible : {_jsonServices.LastError ?? "raison inconnue"}.";
+        StatusMessage = Globals.IsDatabaseAvailable
+            ? "Montre ajoutée à votre collection."
+            : "Montre ajoutée localement (mode hors-ligne, non persistée).";
 
         CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
     }
-
     // ===== Cycle de vie =====
 
     /// <summary>

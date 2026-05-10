@@ -46,4 +46,17 @@ public class Watch
     [BsonIgnore]
     [JsonIgnore]
     public IImage? Picture { get; set; }
+
+    /// <summary>
+    /// Indique si la montre a des champs essentiels manquants (utile après import CSV partiel).
+    /// Permet d'afficher un badge "À compléter" dans la liste pour aider l'utilisateur
+    /// à repérer les fiches incomplètes à enrichir.
+    /// </summary>
+    [BsonIgnore]
+    [JsonIgnore]
+    public bool IsIncomplete =>
+        string.IsNullOrWhiteSpace(Barcode)
+        || string.IsNullOrWhiteSpace(Reference)
+        || Diameter <= 0
+        || Price <= 0;
 }
