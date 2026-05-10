@@ -1,0 +1,8 @@
+﻿WatchCollection - .NET III 2025-2026
+
+Auteurs:
+- Harith Lemti
+- Younes Loukili
+
+Lien GitHub:
+https://github.com/Lemti/WatchCollection

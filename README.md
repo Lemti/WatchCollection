@@ -1,6 +1,6 @@
 # WatchCollection
 
-> Projet académique de seconde session — HELB Ilya Prigogine, Bachelor en informatique de gestion, .NET III (2025-2026)
+> Projet académique — HELB Ilya Prigogine, Bachelor en informatique de gestion, .NET III (2025-2026)
 
 Application multiplateforme de gestion d'une collection privée de montres, développée en C# / .NET 10 avec Avalonia UI 11 et MongoDB. Le logiciel permet l'acquisition de montres via scanner USB, la persistance distribuée (MongoDB privé + serveur JSON académique), l'import et l'export CSV, ainsi qu'une visualisation analytique de la collection.
 
