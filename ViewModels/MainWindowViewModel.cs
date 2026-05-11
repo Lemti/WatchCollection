@@ -192,17 +192,27 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Retour à la liste après ajout d'une montre. La persistance MongoDB est déjà
-    /// faite par AddWatchAsync dans AddWatchViewModel (collection privée — cahier v4).
-    /// Le serveur JSON académique est utilisé en lecture seule comme fallback de résilience,
-    /// jamais en écriture, pour éviter la pollution croisée entre étudiants partageant le serveur.
+    /// Retour à la liste après ajout d'une montre. Synchronise les modifications sur les deux
+    /// sources de persistance pour respecter le cahier des charges :
+    ///   - MongoDB : collection privée par utilisateur (section 5).
+    ///   - Serveur JSON académique : sauvegarde sur serveur distant (section 2.x).
+    /// En mode hors-ligne, le push JSON est suspendu pour ne pas polluer le serveur
+    /// partagé entre étudiants. Les modifs restent en mémoire pour la session courante.
     /// </summary>
     [RelayCommand]
-    private void SaveAndReturn()
+    private async Task SaveAndReturn()
     {
-        StatusMessage = Globals.IsDatabaseAvailable
-            ? "Montre ajoutée à votre collection."
-            : "Montre ajoutée localement (mode hors-ligne, non persistée).";
+        if (Globals.IsDatabaseAvailable)
+        {
+            var success = await _jsonServices.SetWatchesAsync(Globals.MyWatches);
+            StatusMessage = success
+                ? "Collection sauvegardée (MongoDB + serveur JSON)."
+                : $"Sauvegarde JSON impossible : {_jsonServices.LastError ?? "raison inconnue"}.";
+        }
+        else
+        {
+            StatusMessage = "Montre ajoutée localement (mode hors-ligne, non persistée).";
+        }
 
         CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
     }
