@@ -216,7 +216,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentPage = new CollectionViewModel(GoToDetailsFromChildCommand);
     }
-    // ===== Cycle de vie =====
 
     /// <summary>
     /// Quand la page courante change, on dispose proprement la précédente
@@ -227,7 +226,6 @@ public partial class MainWindowViewModel : ViewModelBase
         oldValue?.Dispose();
     }
 
-    // ===== Données d'exemple (mode hors-ligne) =====
 
     private void LoadSampleData()
     {
