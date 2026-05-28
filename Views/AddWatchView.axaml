@@ -40,19 +40,24 @@
                                    FontSize="17"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </StackPanel>
-                    <TextBlock Text="Connectez un scanner de code-barre pour identifier automatiquement la montre"
+                    <TextBlock Text="Le scanner se connecte automatiquement à l'ouverture de cette page. Scannez un code-barre pour renseigner le champ Code-barre."
                                FontFamily="{DynamicResource FontInter}"
                                FontSize="12"
-                               Foreground="{DynamicResource TextSecondaryBrush}"/>
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Button Content="Connecter"
-                                Command="{Binding ConnectScannerCommand}"
-                                IsVisible="{Binding !IsScannerConnected}"
-                                Classes="success"/>
-                        <Button Content="Déconnecter"
-                                Command="{Binding DisconnectScannerCommand}"
-                                IsVisible="{Binding IsScannerConnected}"
-                                Classes="danger"/>
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"/>
+
+                    <!-- Indicateur de statut du scanner (connexion automatique) -->
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <!-- Pastille verte si connecté -->
+                        <Ellipse Width="10" Height="10"
+                                 VerticalAlignment="Center"
+                                 Fill="{DynamicResource SuccessForestBrush}"
+                                 IsVisible="{Binding IsScannerConnected}"/>
+                        <!-- Pastille grise si non connecté -->
+                        <Ellipse Width="10" Height="10"
+                                 VerticalAlignment="Center"
+                                 Fill="{DynamicResource TextMutedBrush}"
+                                 IsVisible="{Binding !IsScannerConnected}"/>
                         <TextBlock Text="{Binding StatusMessage}"
                                    FontFamily="{DynamicResource FontInter}"
                                    FontSize="12"

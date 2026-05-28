@@ -9,20 +9,15 @@ using WatchCollection.Services;
 
 namespace WatchCollection.ViewModels;
 
-/// <summary>
-/// ViewModel de la page d'ajout de montres.
-/// Gère le scanner USB, la validation des champs et la persistance MongoDB
-/// (avec lien automatique vers la collection privée de l'utilisateur — cahier v4.0).
-/// </summary>
+// ViewModel de la page d'ajout de montres.
+// Connecte automatiquement le scanner USB à l'ouverture, gère la validation
+// des champs et la persistance MongoDB (collection privée de l'utilisateur).
 public partial class AddWatchViewModel : ViewModelBase
 {
-    private readonly Action _onWatchAdded;
+    private readonly Action? _onWatchAdded;
     private readonly ScannerManager _scanner = new();
     private readonly MongoDBService _mongoDbService = new();
 
-    /// <summary>
-    /// Options disponibles pour le type de mouvement (cahier : auto, quartz, manuel).
-    /// </summary>
     public string[] MovementOptions { get; } = ["Automatic", "Quartz", "Manual"];
 
     [ObservableProperty] private string _barcode = string.Empty;
@@ -43,19 +38,37 @@ public partial class AddWatchViewModel : ViewModelBase
     {
         _onWatchAdded = onWatchAdded;
         _scanner.BarcodeScanned += OnBarcodeScanned;
+
+        // Connexion automatique du scanner à l'ouverture de la page.
+        // Si aucun scanner n'est branché, on continue sans bloquer (saisie manuelle possible).
+        TryConnectScanner();
     }
 
-    /// <summary>
-    /// Constructeur sans paramètre pour le designer Avalonia uniquement.
-    /// </summary>
+    // Constructeur sans paramètre requis par le designer Avalonia.
     public AddWatchViewModel()
     {
-        _onWatchAdded = () => { };
+    }
+
+    // Tente de connecter le scanner. Non bloquant : en cas d'échec,
+    // l'utilisateur peut toujours saisir le code-barre à la main.
+    private void TryConnectScanner()
+    {
+        if (_scanner.TryOpenPort(out var error))
+        {
+            IsScannerConnected = true;
+            StatusMessage = "Scanner connecté, en attente de scan…";
+        }
+        else
+        {
+            IsScannerConnected = false;
+            StatusMessage = error ?? "Aucun scanner détecté, saisie manuelle disponible.";
+        }
     }
 
     private void OnBarcodeScanned(object? sender, string barcode)
     {
-        // Le scanner émet sur un thread non-UI, on bascule sur le thread UI pour modifier la propriété bindée
+        // Le SerialPort déclenche DataReceived sur un thread du pool, pas sur le thread UI.
+        // On repasse donc sur le thread UI pour modifier une propriété bindée sans crash.
         Dispatcher.UIThread.Post(() =>
         {
             Barcode = barcode;
@@ -63,33 +76,7 @@ public partial class AddWatchViewModel : ViewModelBase
         });
     }
 
-    [RelayCommand]
-    private void ConnectScanner()
-    {
-        if (_scanner.TryOpenPort(out var error))
-        {
-            IsScannerConnected = true;
-            StatusMessage = "Scanner connecté. En attente de scan...";
-        }
-        else
-        {
-            IsScannerConnected = false;
-            StatusMessage = error ?? "Erreur de connexion au scanner.";
-        }
-    }
-
-    [RelayCommand]
-    private void DisconnectScanner()
-    {
-        _scanner.ClosePort();
-        IsScannerConnected = false;
-        StatusMessage = "Scanner déconnecté.";
-    }
-
-    /// <summary>
-    /// Ajoute la montre à la collection. Persiste en MongoDB si connecté,
-    /// sinon ajoute uniquement en mémoire (mode hors-ligne).
-    /// </summary>
+    // Ajoute la montre. Persiste en MongoDB si connecté, sinon en mémoire (hors-ligne).
     [RelayCommand]
     private async Task AddWatch()
     {
@@ -116,7 +103,6 @@ public partial class AddWatchViewModel : ViewModelBase
                 Stock = Stock
             };
 
-            // Persistance : MongoDB en priorité, sinon ajout en mémoire (mode hors-ligne)
             if (Globals.IsDatabaseAvailable && Globals.CurrentUser is not null)
             {
                 var saved = await _mongoDbService.AddWatchAsync(newWatch, Globals.CurrentUser);
@@ -134,7 +120,6 @@ public partial class AddWatchViewModel : ViewModelBase
 
             Globals.MyWatches.Add(newWatch);
 
-            // Petit délai pour que l'utilisateur voie le message de confirmation
             await Task.Delay(800);
             _onWatchAdded?.Invoke();
         }
@@ -147,9 +132,7 @@ public partial class AddWatchViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel() => _onWatchAdded?.Invoke();
 
-    /// <summary>
-    /// Valide les champs avant ajout. Empêche les "champs corrompus" (commentaire prof).
-    /// </summary>
+    // Valide les champs avant ajout pour éviter d'enregistrer une montre incomplète.
     private bool IsValid(out string error)
     {
         if (string.IsNullOrWhiteSpace(Barcode))
@@ -194,6 +177,7 @@ public partial class AddWatchViewModel : ViewModelBase
 
     public new void Dispose()
     {
+        // Déconnexion automatique du scanner quand on quitte la page.
         _scanner.BarcodeScanned -= OnBarcodeScanned;
         _scanner.Dispose();
         base.Dispose();
