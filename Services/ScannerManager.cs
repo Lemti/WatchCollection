@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 
 namespace WatchCollection.Services;
 
@@ -14,7 +13,6 @@ public sealed class ScannerManager : IDisposable
 {
     private const int BaudRate = 9600;
     private const int ReadWriteTimeoutMs = 10000;
-    private const string DeviceIdentifier = "A4A7"; // PID du scanner M900D
 
     private SerialPort? _serialPort;
     private bool _disposed;
@@ -89,55 +87,29 @@ public sealed class ScannerManager : IDisposable
     public void ClosePort() => CloseInternal();
 
     /// <summary>
-    /// Détecte le port COM du scanner selon le système d'exploitation.
+    /// Détecte le port série du scanner. Cross-platform via SerialPort.GetPortNames()
+    /// qui renvoie les COM* sous Windows et les /dev/tty* sous Linux.
     /// </summary>
     private static string? DetectScannerPort()
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return DetectScannerOnWindows();
+        var ports = SerialPort.GetPortNames();
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return DetectScannerOnLinux();
-
-        return null;
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static string? DetectScannerOnWindows()
-    {
-        // WMI : récupère les périphériques connectés et trouve celui correspondant au PID du scanner
-        using var searcher = new System.Management.ManagementObjectSearcher(
-            "SELECT * FROM Win32_PnPEntity WHERE Name LIKE '%(COM%'");
-
-        foreach (var device in searcher.Get())
-        {
-            var pnpId = device["PNPDeviceID"]?.ToString() ?? string.Empty;
-            var name = device["Name"]?.ToString() ?? string.Empty;
-
-            if (!pnpId.Contains($"PID_{DeviceIdentifier}", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var start = name.LastIndexOf("COM", StringComparison.Ordinal);
-            var end = name.LastIndexOf(')');
-
-            if (start >= 0 && end > start)
-                return name.Substring(start, end - start);
-        }
-        return null;
-    }
-
-    private static string? DetectScannerOnLinux()
-    {
-        const string serialDir = "/dev/serial/by-id";
-        if (!Directory.Exists(serialDir))
+        if (ports.Length == 0)
             return null;
 
-        foreach (var device in Directory.GetFiles(serialDir))
+        // Sur Linux, on privilégie les ports USB-série typiques d'un scanner ou Arduino
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            if (device.Contains(DeviceIdentifier, StringComparison.OrdinalIgnoreCase))
-                return Path.GetFullPath(device);
+            foreach (var p in ports)
+            {
+                if (p.Contains("ttyUSB", StringComparison.OrdinalIgnoreCase)
+                    || p.Contains("ttyACM", StringComparison.OrdinalIgnoreCase))
+                    return p;
+            }
         }
-        return null;
+
+        // Par défaut : premier port disponible
+        return ports[0];
     }
 
     private void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
